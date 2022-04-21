@@ -1,4 +1,4 @@
 package com.example.todolist.command
 
-class TaskAndSubtasksDTO {
+class TaskAndSubtasksDTO(val mainTodoId: Int, val subtasksIds: MutableList<Int>) {
 }

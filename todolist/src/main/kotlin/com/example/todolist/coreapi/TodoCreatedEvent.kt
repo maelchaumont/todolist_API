@@ -1,4 +1,6 @@
 package com.example.todolist.coreapi
 
-class TodoCreatedEvent {
+import com.example.todolist.command.Todo
+
+class TodoCreatedEvent(val theTodo: Todo) {
 }

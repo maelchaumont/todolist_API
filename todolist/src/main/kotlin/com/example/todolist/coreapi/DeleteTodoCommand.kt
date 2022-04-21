@@ -1,4 +1,4 @@
 package com.example.todolist.coreapi
 
-class DeleteTodoCommand {
+class DeleteTodoCommand(val id: Int) {
 }

@@ -28,6 +28,8 @@ dependencies {
 	implementation 'org.axonframework.extensions.mongo:axon-mongo'
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+	implementation 'org.litote.kmongo:kmongo:4.5.1'
+	implementation 'org.springframework.data:spring-data-mongodb'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.axonframework:axon-test'
 }

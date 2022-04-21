@@ -1,4 +1,4 @@
-package com.example.todolist.query
+package com.example.todolist.queryr
 
-class FindOneTodoQuery {
+class FindOneTodoQuery(id: Int) {
 }

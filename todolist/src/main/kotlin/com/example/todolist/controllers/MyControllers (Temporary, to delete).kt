@@ -3,17 +3,15 @@ package com.example.todolist.controllers
 import com.example.todolist.command.TaskAndSubtasksDTO
 import com.example.todolist.command.Todo
 import com.example.todolist.command.TodoNoIdDTO
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.example.todolist.coreapi.CreateTodoDTOCommand
+import com.example.todolist.coreapi.DeleteTodoCommand
+import com.example.todolist.query.FindAllTodoQuery
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
 
-class MyControllers {
+class `MyControllers (Temporary, to delete)` {
     @RestController
     class HelloController {
         @GetMapping("/hello")
@@ -32,8 +30,8 @@ class MyControllers {
         var random = Random();
 
         @GetMapping("/randNumber")
-        fun randNumber(): String {
-            return "Random number is " + generateRand(a,b).toString()
+        fun randNumber(): ResponseEntity<Any> {
+            return ResponseEntity.of(Optional.of(generateRand(a,b)))
         }
 
         fun generateRand(from: Int, to: Int) : Int {
@@ -43,15 +41,17 @@ class MyControllers {
 
     @RestController
     class TodoController {
+        /*
         var todos: MutableList<Todo> = mutableListOf(Todo(1, "PremierTodo","Desc",false, "high"),
             Todo(2, "TodoDeux","2scription",true, "low"),
             Todo(3, "Number3","Bonjour",false, "medium"))
-
+         */
         @GetMapping("/todos")
-        fun todosGET(): MutableList<Todo> {
-            return todos
+        fun todosGET(): FindAllTodoQuery {
+            return FindAllTodoQuery()
         }
 
+        /*
         @GetMapping("/todos/{id}")
         fun todosGETOne(@PathVariable id: Int): ResponseEntity<Todo> {
             for(todo in todos) {
@@ -59,17 +59,20 @@ class MyControllers {
             }
             return ResponseEntity(HttpStatus.NOT_FOUND)
         }
+         */
+
 
         @PostMapping("/todos")
-        fun postController(@RequestBody todoTemp: TodoNoIdDTO): ResponseEntity<Any> {
-            val todoWithMaxId : Todo? = todos.maxByOrNull {todo -> todo.id}
-            if (todoWithMaxId != null)
-                todos.add(Todo(todoWithMaxId.id+1, todoTemp.name, todoTemp.description, false, todoTemp.priority))
-            else
-                todos.add(Todo(1, todoTemp.name, todoTemp.description, false, todoTemp.priority))
-            return ResponseEntity(HttpStatus.CREATED)
+        fun postController(@RequestBody createTodoDTOCommand: CreateTodoDTOCommand) {
+            CreateTodoDTOCommand(createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)
         }
 
+
+        @DeleteMapping("/todos/{id}")
+        fun todosDELETEOne(@PathVariable id: Int): DeleteTodoCommand {
+            return DeleteTodoCommand(id)
+        }
+        /*
         @DeleteMapping("/todos/{id}")
         fun todosDELETEOne(@PathVariable id: Int): ResponseEntity<Any> {
             for(todo in todos) {
@@ -80,12 +83,17 @@ class MyControllers {
             }
             return ResponseEntity(HttpStatus.NOT_FOUND)
         }
+         */
 
+        /*
         @GetMapping("/todos/not-finished")
         fun todosNotFinished(): ResponseEntity<List<Todo>> {
             return ResponseEntity(todos.filter {todo -> !todo.finished}, HttpStatus.OK)
         }
 
+         */
+
+        /*
         @GetMapping("/todos/priority")
         fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): ResponseEntity<Any> { // = QueryParam
             val LIST_PRIORITIES : List<String> = listOf("low", "medium", "high")
@@ -93,14 +101,6 @@ class MyControllers {
                 return ResponseEntity(todos.filter { todo -> todo.priority == prio }, HttpStatus.OK)
             else
                 return ResponseEntity("Existing priorities are : $LIST_PRIORITIES", HttpStatus.NOT_FOUND)
-
-            /*
-            val todosPrio = mutableListOf<Todo>()
-            for (todo in todos) {
-                if (todo.priority == prio) todosPrio.add(todo)
-            }
-            return todosPrio
-             */
         }
 
         @PostMapping("/todos/add-subtasks")
@@ -124,5 +124,6 @@ class MyControllers {
             }
             return ResponseEntity("Resource deleted", HttpStatus.CREATED)
         }
+         */
     }
 }
