@@ -1,9 +1,11 @@
 package com.example.todolist.command
 
+import com.example.todolist.TodolistApplication
 import com.example.todolist.coreapi.CreateRealTodoCommand
 import com.example.todolist.coreapi.TodoCreatedEvent
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.modelling.command.AggregateIdentifier
+import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
 import org.springframework.beans.factory.annotation.Value
@@ -12,9 +14,10 @@ import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 
 @Aggregate
-@Document("todo")
+@Document(collection = "todolist")
 data class Todo @CommandHandler constructor(val createRealTodoCommand: CreateRealTodoCommand) {
     @Id
+    @AggregateIdentifier
     val id: Int = createRealTodoCommand.id
     @Field(name = "name")
     val name: String = createRealTodoCommand.name
@@ -25,7 +28,7 @@ data class Todo @CommandHandler constructor(val createRealTodoCommand: CreateRea
 
     //Used in all constructors
     init {
-        TodoCreatedEvent(this);
+        apply(TodoCreatedEvent(this))
     }
 }
 

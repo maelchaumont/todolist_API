@@ -1,4 +1,6 @@
 package com.example.todolist.coreapi
 
-class DeleteTodoCommand(val id: Int) {
+import org.axonframework.modelling.command.AggregateIdentifier
+
+class DeleteTodoCommand(@AggregateIdentifier val id: Int) {
 }

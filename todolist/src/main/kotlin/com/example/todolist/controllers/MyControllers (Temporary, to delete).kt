@@ -1,15 +1,18 @@
 package com.example.todolist.controllers
 
-import com.example.todolist.command.TaskAndSubtasksDTO
-import com.example.todolist.command.Todo
-import com.example.todolist.command.TodoNoIdDTO
+import com.example.todolist.coreapi.CreateRealTodoCommand
 import com.example.todolist.coreapi.CreateTodoDTOCommand
 import com.example.todolist.coreapi.DeleteTodoCommand
 import com.example.todolist.query.FindAllTodoQuery
-import org.springframework.http.HttpStatus
+import com.example.todolist.queryr.FindOneTodoQuery
+import org.axonframework.commandhandling.SimpleCommandBus
+import org.axonframework.commandhandling.gateway.CommandGateway
+import org.axonframework.commandhandling.gateway.CommandGatewayFactory
+import org.axonframework.commandhandling.gateway.DefaultCommandGateway
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
+
 
 class `MyControllers (Temporary, to delete)` {
     @RestController
@@ -46,31 +49,31 @@ class `MyControllers (Temporary, to delete)` {
             Todo(2, "TodoDeux","2scription",true, "low"),
             Todo(3, "Number3","Bonjour",false, "medium"))
          */
+
         @GetMapping("/todos")
-        fun todosGET(): FindAllTodoQuery {
+        fun todosGET(): FindAllTodoQuery{
             return FindAllTodoQuery()
         }
 
-        /*
+
         @GetMapping("/todos/{id}")
-        fun todosGETOne(@PathVariable id: Int): ResponseEntity<Todo> {
-            for(todo in todos) {
-                if (todo.id == id) return ResponseEntity<Todo>(todo, HttpStatus.OK) //j'aurais utilisé any{} mais je  n'arrive pas à récupérer le todo dans le prédicat
-            }
-            return ResponseEntity(HttpStatus.NOT_FOUND)
+        fun todosGETOne(@PathVariable id: Int) {
+            FindOneTodoQuery(id)
         }
-         */
+
 
 
         @PostMapping("/todos")
-        fun postController(@RequestBody createTodoDTOCommand: CreateTodoDTOCommand) {
-            CreateTodoDTOCommand(createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)
+        fun postController(@RequestBody createTodoDTOCommand: CreateTodoDTOCommand): CreateRealTodoCommand {
+            return CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)
+            //val commandGateway: CommandGateway = DefaultCommandGateway.builder().build()
+            //commandGateway.send<CreateRealTodoCommand>(CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority))
         }
 
 
         @DeleteMapping("/todos/{id}")
-        fun todosDELETEOne(@PathVariable id: Int): DeleteTodoCommand {
-            return DeleteTodoCommand(id)
+        fun todosDELETEOne(@PathVariable id: Int){
+            DeleteTodoCommand(id)
         }
         /*
         @DeleteMapping("/todos/{id}")

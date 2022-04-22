@@ -3,34 +3,39 @@ package com.example.todolist.query
 import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.TodoCreatedEvent
 import com.example.todolist.coreapi.TodoDeletedEvent
+import com.example.todolist.mongoTemplate
 import com.example.todolist.queryr.FindOneTodoQuery
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
-import org.litote.kmongo.KMongo
+import org.bson.Document
 import org.litote.kmongo.eq
-import org.litote.kmongo.getCollection
-import org.litote.kmongo.save
-import org.litote.kmongo.service.MongoClientProvider
-import org.springframework.boot.actuate.trace.http.HttpTrace.Response
-import org.springframework.data.mongodb.core.MongoTemplate
+import org.litote.kmongo.findOne
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.repository.MongoRepository
-import org.springframework.data.mongodb.repository.support.SimpleMongoRepository
-import org.springframework.http.HttpHeaders
+import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Component
+import org.springframework.scheduling.annotation.EnableAsync
 
 class TodoProjection() {
+    /*
     val client = KMongo.createClient() //get com.mongodb.MongoClient new instance
     val database = client.getDatabase("todolist_db") //normal java driver usage
     val collectionTodo = database.getCollection<Todo>() //KMongo extension method
+     */
+    val collectionTodo = mongoTemplate().getCollection("todolist")
+    val myRepository : TodoRepositoryImpl
 
+    init {
+        myRepository = TodoRepositoryImpl()
+    }
 
     @EventHandler
     fun on(todoCreatedEvent: TodoCreatedEvent): ResponseEntity<Any> {
-        collectionTodo.save(todoCreatedEvent.theTodo)
+        //collectionTodo.save(todoCreatedEvent.theTodo)
+        mongoTemplate().save(todoCreatedEvent.theTodo)
+        //myRepository.save(todoCreatedEvent.theTodo)
         return ResponseEntity(todoCreatedEvent.theTodo, HttpStatus.CREATED)
     }
 
@@ -40,14 +45,17 @@ class TodoProjection() {
     }
 
     @QueryHandler
-    fun handle(findAllTodoQuery: FindAllTodoQuery) {
-        /*
+    fun handle(findAllTodoQuery: FindAllTodoQuery): MutableList<Todo> {
         val query = Query()
-        query.fields().include("name").exclude("id")
-        val myList: List<Todo> = mongoTemplate.find(query, Todo::class.java)
-         */
+        query.fields().include("name", "description", "priority")
+        return mongoTemplate().find(query, Todo::class.java)
     }
 
     @QueryHandler
-    fun handle(findOneTodoQuery: FindOneTodoQuery) {}
+    fun handle(findOneTodoQuery: FindOneTodoQuery): Document? {
+        return collectionTodo.findOne { Todo::id eq findOneTodoQuery.id }
+        //val query = Query().addCriteria(Criteria.where("id").isEqualTo(findOneTodoQuery.id))
+        //query.fields().include("name", "description", "priority")
+        //return mongoTemplate().find(query, Todo::class.java)
+    }
 }
