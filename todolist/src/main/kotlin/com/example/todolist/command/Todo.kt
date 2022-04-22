@@ -5,6 +5,7 @@ import com.example.todolist.coreapi.CreateRealTodoCommand
 import com.example.todolist.coreapi.TodoCreatedEvent
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.modelling.command.AggregateIdentifier
+import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
@@ -15,20 +16,29 @@ import org.springframework.data.mongodb.core.mapping.Field
 
 @Aggregate
 @Document(collection = "todolist")
-data class Todo @CommandHandler constructor(val createRealTodoCommand: CreateRealTodoCommand) {
+//no args Constructor //pas compatible avec mot clé data, jsp pourquoi
+class Todo constructor()  {
     @Id
     @AggregateIdentifier
-    val id: Int = createRealTodoCommand.id
+    var id: Int = 0 //pas initialisé à la bonne valeur (pour le constructeur sans paramètres)
     @Field(name = "name")
-    val name: String = createRealTodoCommand.name
+    var name: String = ""
     @Field(name = "description")
-    val description: String = createRealTodoCommand.description
+    var description: String = ""
     @Field(name = "priority")
-    val priority: String = createRealTodoCommand.priority
+    var priority: String = ""
 
     //Used in all constructors
     init {
-        apply(TodoCreatedEvent(this))
+        AggregateLifecycle.apply(TodoCreatedEvent(this))
+    }
+
+    @CommandHandler
+    constructor(createRealTodoCommand: CreateRealTodoCommand) : this() {
+        this.id = createRealTodoCommand.id
+        this.name = createRealTodoCommand.name
+        this.description = createRealTodoCommand.description
+        this.priority = createRealTodoCommand.priority
     }
 }
 

@@ -1,13 +1,17 @@
 package com.example.todolist.controllers
 
+import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.CreateRealTodoCommand
 import com.example.todolist.coreapi.CreateTodoDTOCommand
 import com.example.todolist.coreapi.DeleteTodoCommand
+import com.example.todolist.myCommandGateway
 import com.example.todolist.query.FindAllTodoQuery
 import com.example.todolist.queryr.FindOneTodoQuery
+import org.axonframework.commandhandling.CommandBus
+import org.axonframework.commandhandling.GenericCommandMessage
 import org.axonframework.commandhandling.SimpleCommandBus
+import org.axonframework.commandhandling.callbacks.FutureCallback
 import org.axonframework.commandhandling.gateway.CommandGateway
-import org.axonframework.commandhandling.gateway.CommandGatewayFactory
 import org.axonframework.commandhandling.gateway.DefaultCommandGateway
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -64,10 +68,18 @@ class `MyControllers (Temporary, to delete)` {
 
 
         @PostMapping("/todos")
-        fun postController(@RequestBody createTodoDTOCommand: CreateTodoDTOCommand): CreateRealTodoCommand {
-            return CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)
+        fun postController(@RequestBody createTodoDTOCommand: CreateTodoDTOCommand) {
+            //return CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)
             //val commandGateway: CommandGateway = DefaultCommandGateway.builder().build()
             //commandGateway.send<CreateRealTodoCommand>(CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority))
+            //val myCommandBus: CommandBus = SimpleCommandBus.builder().build()
+            //val commandGateway: CommandGateway = DefaultCommandGateway.builder().commandBus(myCommandBus).build()
+            /*
+            commandBus.dispatch(
+                GenericCommandMessage.asCommandMessage(CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)),
+                FutureCallback<Todo, Void>() //FutureCallback mais jamais de callback
+            )*/
+            myCommandGateway?.sendAndWait<CreateRealTodoCommand>(CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority))
         }
 
 

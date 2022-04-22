@@ -1,25 +1,29 @@
 package com.example.todolist
 
-import com.example.todolist.query.TodoRepository
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
+import org.axonframework.commandhandling.CommandBus
+import org.axonframework.commandhandling.gateway.CommandGateway
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import org.springframework.cache.annotation.EnableCaching
-import org.springframework.context.ApplicationContext
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
-import org.springframework.scheduling.annotation.EnableAsync
 
 
 @SpringBootApplication
 @EnableMongoRepositories
 class TodolistApplication
+	var myCommandGateway: CommandGateway? = null
+	var myCommandBus: CommandBus? = null
 
 fun main(args: Array<String>) {
-	runApplication<TodolistApplication>(*args)
+	val myAppContext : ConfigurableApplicationContext = runApplication<TodolistApplication>(*args)
+	@Bean
+	myCommandGateway = myAppContext.getBean(CommandGateway::class.java)
+	@Bean
+	myCommandBus = myAppContext.getBean(CommandBus::class.java)
 }
 
 @Bean

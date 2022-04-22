@@ -25,11 +25,7 @@ class TodoProjection() {
     val collectionTodo = database.getCollection<Todo>() //KMongo extension method
      */
     val collectionTodo = mongoTemplate().getCollection("todolist")
-    val myRepository : TodoRepositoryImpl
 
-    init {
-        myRepository = TodoRepositoryImpl()
-    }
 
     @EventHandler
     fun on(todoCreatedEvent: TodoCreatedEvent): ResponseEntity<Any> {
