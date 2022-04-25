@@ -3,7 +3,7 @@ package com.example.todolist.coreapi
 import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.TargetAggregateIdentifier
 
-class CreateRealTodoCommand(@TargetAggregateIdentifier val id: Int, val name: String, val description: String, val priority: String) {
+class CreateRealTodoCommand(val id: Int, val name: String, val description: String, val priority: String) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
