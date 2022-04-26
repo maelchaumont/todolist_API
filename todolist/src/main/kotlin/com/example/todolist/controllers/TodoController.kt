@@ -1,12 +1,22 @@
 package com.example.todolist.controllers
 
+import com.example.todolist.command.Todo
 import com.example.todolist.command.TodoNoIdDTO
 import com.example.todolist.coreapi.CreateRealTodoCommand
 import com.example.todolist.coreapi.DeleteTodoCommand
+import com.example.todolist.coreapi.TodoDTOCreatedEvent
+import com.example.todolist.coreapi.UpdateTodoCommand
+import com.example.todolist.query.CountTodosQuery
 import com.example.todolist.query.FindAllTodoQuery
 import com.example.todolist.queryr.FindOneTodoQuery
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.util.JSONPObject
 import org.axonframework.commandhandling.gateway.CommandGateway
+import org.axonframework.eventhandling.gateway.EventGateway
+import org.bson.json.JsonObject
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.mongodb.core.query.Update
+import org.springframework.http.HttpEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -19,7 +29,7 @@ import java.util.*
 
 //RestController implémente Controller qui implémente lui-même Component. Component permet de retrouver un Bean, ici la CommandGateway passée en constructeur
 @RestController
-class TodoController(val myCommandGateway: CommandGateway) {
+class TodoController(val myCommandGateway: CommandGateway, val myEventGateway: EventGateway) {
 
 
     /*
@@ -43,24 +53,30 @@ class TodoController(val myCommandGateway: CommandGateway) {
 
     @PostMapping("/todos")
     fun postController(@RequestBody todoNoIdDTO: TodoNoIdDTO) {
-        //return CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)
-        //val commandGateway: CommandGateway = DefaultCommandGateway.builder().build()
-        //commandGateway.send<CreateRealTodoCommand>(CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority))
-        //val myCommandBus: CommandBus = SimpleCommandBus.builder().build()
-        //val commandGateway: CommandGateway = DefaultCommandGateway.builder().commandBus(myCommandBus).build()
-        /*
-        commandBus.dispatch(
-            GenericCommandMessage.asCommandMessage(CreateRealTodoCommand(1, createTodoDTOCommand.name, createTodoDTOCommand.description, createTodoDTOCommand.priority)),
-            FutureCallback<Todo, Void>()
-        )*/
-        myCommandGateway.sendAndWait<CreateRealTodoCommand>(CreateRealTodoCommand(5, todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority))
+        myEventGateway.publish(TodoDTOCreatedEvent(TodoNoIdDTO(todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority)))
+        //myCommandGateway.sendAndWait<CreateRealTodoCommand>(CreateRealTodoCommand(9, todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority))
     }
 
+    @GetMapping("/todos/count")
+    fun countTodos() {
+        CountTodosQuery()
+    }
 
     @DeleteMapping("/todos/{id}")
     fun todosDELETEOne(@PathVariable id: Int){
         DeleteTodoCommand(id)
     }
+
+    @PostMapping("todos/update")
+    fun updateTodo(@RequestBody myJson: String){
+        // pas sûr du tout que ça marche, il y a un cast un peu bizarre à la fin
+        //val jsonObject = JsonObject(myJson)
+        //val idTodo: Int = jsonObject.json.get
+        myCommandGateway.send<UpdateTodoCommand>(UpdateTodoCommand(ObjectMapper().readValue(myJson, Map::class.java) as Map<String, Any>, 2))
+        // 2 A LA FIN A CHANGER
+    }
+
+
     /*
     @DeleteMapping("/todos/{id}")
     fun todosDELETEOne(@PathVariable id: Int): ResponseEntity<Any> {
