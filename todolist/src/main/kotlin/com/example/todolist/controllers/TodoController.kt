@@ -8,15 +8,15 @@ import com.example.todolist.coreapi.TodoDTOCreatedEvent
 import com.example.todolist.coreapi.UpdateTodoCommand
 import com.example.todolist.query.CountTodosQuery
 import com.example.todolist.query.FindAllTodoQuery
-import com.example.todolist.queryr.FindOneTodoQuery
+import com.example.todolist.query.FindOneTodoQuery
+import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.util.JSONPObject
+import io.grpc.internal.JsonParser
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.gateway.EventGateway
 import org.bson.json.JsonObject
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.mongodb.core.query.Update
-import org.springframework.http.HttpEntity
+import org.springframework.boot.json.GsonJsonParser
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -70,10 +70,8 @@ class TodoController(val myCommandGateway: CommandGateway, val myEventGateway: E
     @PostMapping("todos/update")
     fun updateTodo(@RequestBody myJson: String){
         // pas sûr du tout que ça marche, il y a un cast un peu bizarre à la fin
-        //val jsonObject = JsonObject(myJson)
-        //val idTodo: Int = jsonObject.json.get
-        myCommandGateway.send<UpdateTodoCommand>(UpdateTodoCommand(ObjectMapper().readValue(myJson, Map::class.java) as Map<String, Any>, 2))
-        // 2 A LA FIN A CHANGER
+        val idTodo: Int = (GsonJsonParser().parseMap(myJson)["id"] as Double).toInt()
+        myCommandGateway.send<UpdateTodoCommand>(UpdateTodoCommand(ObjectMapper().readValue(myJson, Map::class.java) as Map<String, Any>, idTodo))
     }
 
 

@@ -14,20 +14,21 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
+import org.springframework.data.mongodb.core.mapping.MongoId
 
 @Aggregate
 @Document(collection = "todolist")
 //no args Constructor //pas compatible avec mot clé data, jsp pourquoi
 class Todo constructor()  {
-    @Id
+    @MongoId
     @AggregateIdentifier
-    var id: Int = 0 //pas initialisé à la bonne valeur (pour le constructeur sans paramètres)
+    var id: Int? = null //pas initialisé à la bonne valeur (pour le constructeur sans paramètres)
     @Field(name = "name")
-    var name: String = ""
+    var name: String? = null
     @Field(name = "description")
-    var description: String = ""
+    var description: String? = null
     @Field(name = "priority")
-    var priority: String = ""
+    var priority: String? = null
 
     @CommandHandler
     constructor(createRealTodoCommand: CreateRealTodoCommand) : this() {
@@ -42,13 +43,28 @@ class Todo constructor()  {
     fun updateTodo(updateTodoCommand: UpdateTodoCommand) {
         for(entry in updateTodoCommand.mapThingsToUpdate.entries) {
             when(entry.key) { // = switch
-                "id" -> this.id = entry.value as Int
                 "name" -> this.name = entry.value as String
                 "description" -> this.description = entry.value as String
                 "priority" -> this.priority = entry.value as String
             }
         }
         apply(TodoUpdatedEvent(this))
+    }
+
+
+    @EventSourcingHandler
+    fun on(todoCreatedEvent: TodoCreatedEvent){
+        this.id = todoCreatedEvent.theTodo.id
+        this.name = todoCreatedEvent.theTodo.name
+        this.description = todoCreatedEvent.theTodo.description
+        this.priority = todoCreatedEvent.theTodo.priority
+    }
+
+    @EventSourcingHandler
+    fun on(todoUpdatedEvent: TodoUpdatedEvent) {
+        this.name = todoUpdatedEvent.todoUpdated.name
+        this.description = todoUpdatedEvent.todoUpdated.description
+        this.priority = todoUpdatedEvent.todoUpdated.priority
     }
 
     @EventSourcingHandler
@@ -71,15 +87,15 @@ class Todo constructor()  {
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = id
-        result = 31 * result + name.hashCode()
-        result = 31 * result + description.hashCode()
-        result = 31 * result + priority.hashCode()
-        return result
-    }
-
     override fun toString(): String {
         return "Todo(id=$id, name='$name', description='$description', priority='$priority')"
+    }
+
+    override fun hashCode(): Int {
+        var result = id ?: 0
+        result = 31 * result + (name?.hashCode() ?: 0)
+        result = 31 * result + (description?.hashCode() ?: 0)
+        result = 31 * result + (priority?.hashCode() ?: 0)
+        return result
     }
 }

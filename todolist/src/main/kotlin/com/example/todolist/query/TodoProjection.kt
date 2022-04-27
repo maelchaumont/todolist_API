@@ -2,7 +2,7 @@ package com.example.todolist.query
 
 import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.*
-import com.example.todolist.queryr.FindOneTodoQuery
+import com.example.todolist.query.FindOneTodoQuery
 import com.google.common.collect.Iterables.find
 import com.mongodb.client.MongoClientFactory
 import org.axonframework.commandhandling.gateway.CommandGateway
@@ -52,10 +52,12 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository, val myComman
 
     @EventHandler
     fun on(todoUpdatedEvent: TodoUpdatedEvent): ResponseEntity<Any> {
-        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id).isPresent) { //trouve l'ancienne virsion du Todo possédant le m^me id que le nouveau
-            //je n'ai pas trouvé update ?? Donc je delete l'ancien Todo puis save le nouveau
-            todoRepository.deleteById(todoUpdatedEvent.todoUpdated.id)
-            todoRepository.save(todoUpdatedEvent.todoUpdated)
+        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).isPresent) { //trouve l'ancienne virsion du Todo possédant le m^me id que le nouveau
+            val todoToUpdate = todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).get()
+            todoToUpdate.name = todoUpdatedEvent.todoUpdated.name
+            todoToUpdate.description = todoUpdatedEvent.todoUpdated.description
+            todoToUpdate.priority = todoUpdatedEvent.todoUpdated.priority
+            todoRepository.save(todoToUpdate)
             return ResponseEntity("todo n°${todoUpdatedEvent.todoUpdated.id} updated", HttpStatus.OK)
         }
         else
