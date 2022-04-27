@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.util.JSONPObject
 import io.grpc.internal.JsonParser
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.gateway.EventGateway
+import org.axonframework.queryhandling.QueryGateway
 import org.bson.json.JsonObject
 import org.springframework.boot.json.GsonJsonParser
 import org.springframework.web.bind.annotation.*
@@ -29,7 +30,7 @@ import java.util.*
 
 //RestController implémente Controller qui implémente lui-même Component. Component permet de retrouver un Bean, ici la CommandGateway passée en constructeur
 @RestController
-class TodoController(val myCommandGateway: CommandGateway, val myEventGateway: EventGateway) {
+class TodoController(val myCommandGateway: CommandGateway, val queryGateway: QueryGateway, val myEventGateway: EventGateway) {
 
 
     /*
@@ -39,14 +40,14 @@ class TodoController(val myCommandGateway: CommandGateway, val myEventGateway: E
      */
 
     @GetMapping("/todos")
-    fun todosGET(): FindAllTodoQuery{
-        return FindAllTodoQuery()
+    fun todosGET(){
+        queryGateway.query(FindAllTodoQuery(), Int::class.java)
     }
 
 
     @GetMapping("/todos/{id}")
     fun todosGETOne(@PathVariable id: Int) {
-        FindOneTodoQuery(id)
+        queryGateway.query(FindOneTodoQuery(id), Int::class.java)
     }
 
 
@@ -59,12 +60,12 @@ class TodoController(val myCommandGateway: CommandGateway, val myEventGateway: E
 
     @GetMapping("/todos/count")
     fun countTodos() {
-        CountTodosQuery()
+        queryGateway.query(CountTodosQuery(), Int::class.java)
     }
 
     @DeleteMapping("/todos/{id}")
     fun todosDELETEOne(@PathVariable id: Int){
-        DeleteTodoCommand(id)
+        myCommandGateway.send<DeleteTodoCommand>(DeleteTodoCommand(id))
     }
 
     @PostMapping("todos/update")

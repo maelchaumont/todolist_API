@@ -51,6 +51,11 @@ class Todo constructor()  {
         apply(TodoUpdatedEvent(this))
     }
 
+    @CommandHandler
+    fun deleteTodo(deleteTodoCommand: DeleteTodoCommand){
+        apply(TodoDeletedEvent(id as Int))
+    }
+
 
     @EventSourcingHandler
     fun on(todoCreatedEvent: TodoCreatedEvent){
