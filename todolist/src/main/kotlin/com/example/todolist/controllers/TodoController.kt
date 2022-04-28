@@ -9,17 +9,23 @@ import com.example.todolist.coreapi.UpdateTodoCommand
 import com.example.todolist.query.CountTodosQuery
 import com.example.todolist.query.FindAllTodoQuery
 import com.example.todolist.query.FindOneTodoQuery
+import com.example.todolist.query.FindTodosByPriority
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.util.JSONPObject
 import io.grpc.internal.JsonParser
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.gateway.EventGateway
+import org.axonframework.messaging.responsetypes.ResponseType
+import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
 import org.bson.json.JsonObject
 import org.springframework.boot.json.GsonJsonParser
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.*
+import java.util.concurrent.CompletableFuture
 
 
 //val dans le constructeur équivalent à (voir ci-dessous) dans la classe
@@ -40,14 +46,14 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
      */
 
     @GetMapping("/todos")
-    fun todosGET(){
-        queryGateway.query(FindAllTodoQuery(), Int::class.java)
+    fun todosGET(): ResponseEntity<MutableList<Todo>> {
+        return ResponseEntity(queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
     }
 
 
     @GetMapping("/todos/{id}")
-    fun todosGETOne(@PathVariable id: Int) {
-        queryGateway.query(FindOneTodoQuery(id), Int::class.java)
+    fun todosGETOne(@PathVariable id: Int): ResponseEntity<Todo> {
+        return ResponseEntity(queryGateway.query(FindOneTodoQuery(id), ResponseTypes.instanceOf(Todo::class.java)).get(), HttpStatus.OK)
     }
 
 
@@ -55,12 +61,11 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
     @PostMapping("/todos")
     fun postController(@RequestBody todoNoIdDTO: TodoNoIdDTO) {
         myEventGateway.publish(TodoDTOCreatedEvent(TodoNoIdDTO(todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority)))
-        //myCommandGateway.sendAndWait<CreateRealTodoCommand>(CreateRealTodoCommand(9, todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority))
     }
 
     @GetMapping("/todos/count")
-    fun countTodos() {
-        queryGateway.query(CountTodosQuery(), Int::class.java)
+    fun countTodos(): CompletableFuture<Long>? {
+        return queryGateway.query(CountTodosQuery(), ResponseTypes.instanceOf(Long::class.java))
     }
 
     @DeleteMapping("/todos/{id}")
@@ -76,37 +81,21 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
     }
 
 
-    /*
-    @DeleteMapping("/todos/{id}")
-    fun todosDELETEOne(@PathVariable id: Int): ResponseEntity<Any> {
-        for(todo in todos) {
-            if (todo.id == id) {
-                todos.remove(todo)
-                return ResponseEntity("Resource deleted successfully", HttpStatus.CREATED)
-            }
-        }
-        return ResponseEntity(HttpStatus.NOT_FOUND)
-    }
-     */
 
-    /*
-    @GetMapping("/todos/not-finished")
-    fun todosNotFinished(): ResponseEntity<List<Todo>> {
-        return ResponseEntity(todos.filter {todo -> !todo.finished}, HttpStatus.OK)
-    }
 
-     */
-
-    /*
     @GetMapping("/todos/priority")
-    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): ResponseEntity<Any> { // = QueryParam
+    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): ResponseEntity<MutableList<Todo>> { // = QueryParam
+        return ResponseEntity(queryGateway.query(FindTodosByPriority(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
+        /*
         val LIST_PRIORITIES : List<String> = listOf("low", "medium", "high")
         if(prio in LIST_PRIORITIES)
             return ResponseEntity(todos.filter { todo -> todo.priority == prio }, HttpStatus.OK)
         else
             return ResponseEntity("Existing priorities are : $LIST_PRIORITIES", HttpStatus.NOT_FOUND)
+         */
     }
 
+    /*
     @PostMapping("/todos/add-subtasks")
     fun todosAddSubtask(@RequestBody jsonBody: TaskAndSubtasksDTO): ResponseEntity<Any> {
         val mainTodo: Todo = todos.find { todo -> todo.id == jsonBody.mainTodoId}

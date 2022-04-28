@@ -53,6 +53,7 @@ class Todo constructor()  {
 
     @CommandHandler
     fun deleteTodo(deleteTodoCommand: DeleteTodoCommand){
+        markDeleted()
         apply(TodoDeletedEvent(id as Int))
     }
 
@@ -70,11 +71,6 @@ class Todo constructor()  {
         this.name = todoUpdatedEvent.todoUpdated.name
         this.description = todoUpdatedEvent.todoUpdated.description
         this.priority = todoUpdatedEvent.todoUpdated.priority
-    }
-
-    @EventSourcingHandler
-    fun on(todoDeletedEvent: TodoDeletedEvent) {
-        markDeleted()
     }
 
 

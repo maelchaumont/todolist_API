@@ -65,21 +65,30 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository, val myComman
     }
 
     @QueryHandler
-    fun handle(findAllTodoQuery: FindAllTodoQuery): ResponseEntity<List<Todo>> {
-        return ResponseEntity(todoRepository.findAll(), HttpStatus.OK)
+    fun handle(findAllTodoQuery: FindAllTodoQuery): List<Todo> {
+        return todoRepository.findAll()
     }
 
 
     @QueryHandler
-    fun handle(findOneTodoQuery: FindOneTodoQuery): ResponseEntity<Todo> {
-        if (todoRepository.findById(findOneTodoQuery.id).isPresent)
-            return ResponseEntity(todoRepository.findById(findOneTodoQuery.id).get(), HttpStatus.OK)
-        else
-            return ResponseEntity(HttpStatus.NOT_FOUND)
+    fun handle(findOneTodoQuery: FindOneTodoQuery): Todo {
+        return todoRepository.findById(findOneTodoQuery.id).get()
     }
 
     @QueryHandler
     fun handle(countTodosQuery: CountTodosQuery): Long {
         return todoRepository.count()
+    }
+
+    @QueryHandler
+    fun handle(findTodosByPriority: FindTodosByPriority): List<Todo> {
+        val listPrioritiesInDB : MutableList<String> = mutableListOf()
+        for(todo in todoRepository.findAll()) {
+            if(!listPrioritiesInDB.contains(todo.priority) && !todo.priority.equals(""))
+                listPrioritiesInDB.add(todo.priority!!)
+        }
+        if(!listPrioritiesInDB.contains(findTodosByPriority.prioritySearched))
+            throw java.lang.IllegalArgumentException("priority ${findTodosByPriority.prioritySearched} does not exist in database !")
+        return todoRepository.findAll().filter { todo -> todo.priority.equals(findTodosByPriority.prioritySearched) }
     }
 }
