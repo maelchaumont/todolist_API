@@ -1,7 +1,10 @@
 package com.example.todolist.command
 
-import com.example.todolist.TodolistApplication
-import com.example.todolist.coreapi.*
+import com.example.todolist.coreapi.todo.*
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.AddSubtasksToTodosCommand
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.DeleteSubtasksFromTodosCommand
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksAddedToTodoEvent
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksDeletedFromTodoEvent
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.AggregateIdentifier
@@ -10,8 +13,6 @@ import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateLifecycle.markDeleted
 import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 import org.springframework.data.mongodb.core.mapping.MongoId
@@ -30,12 +31,17 @@ class Todo constructor()  {
     @Field(name = "priority")
     var priority: String? = null
 
+    @AggregateMember
+    @Field(name = "subtasks")
+    var subtasks: MutableList<Subtask> = mutableListOf()
+
     @CommandHandler
     constructor(createRealTodoCommand: CreateRealTodoCommand) : this() {
         this.id = createRealTodoCommand.id
         this.name = createRealTodoCommand.name
         this.description = createRealTodoCommand.description
         this.priority = createRealTodoCommand.priority
+        this.subtasks = createRealTodoCommand.subtasks
         AggregateLifecycle.apply(TodoCreatedEvent(this))
     }
 
@@ -46,6 +52,7 @@ class Todo constructor()  {
                 "name" -> this.name = entry.value as String
                 "description" -> this.description = entry.value as String
                 "priority" -> this.priority = entry.value as String
+                "subtasks" -> this.subtasks = entry.value as MutableList<Subtask>
             }
         }
         apply(TodoUpdatedEvent(this))
@@ -57,20 +64,35 @@ class Todo constructor()  {
         apply(TodoDeletedEvent(id as Int))
     }
 
+    @CommandHandler
+    fun addSubtasks(addSubtasksToTodosCommand: AddSubtasksToTodosCommand) {
+        subtasks.addAll(addSubtasksToTodosCommand.subtasksToAdd)
+        apply(SubtasksAddedToTodoEvent(this, addSubtasksToTodosCommand.subtasksToAdd))
+    }
 
+    @CommandHandler
+    fun delSubtasks(deleteSubtasksFromTodosCommand: DeleteSubtasksFromTodosCommand) {
+        subtasks.removeAll(deleteSubtasksFromTodosCommand.subtasksToDelete)
+        apply(SubtasksDeletedFromTodoEvent(this, deleteSubtasksFromTodosCommand.subtasksToDelete))
+    }
+
+    /*
     @EventSourcingHandler
     fun on(todoCreatedEvent: TodoCreatedEvent){
         this.id = todoCreatedEvent.theTodo.id
         this.name = todoCreatedEvent.theTodo.name
         this.description = todoCreatedEvent.theTodo.description
         this.priority = todoCreatedEvent.theTodo.priority
+        this.subtasks = todoCreatedEvent.theTodo.subtasks
     }
+     */
 
     @EventSourcingHandler
     fun on(todoUpdatedEvent: TodoUpdatedEvent) {
         this.name = todoUpdatedEvent.todoUpdated.name
         this.description = todoUpdatedEvent.todoUpdated.description
         this.priority = todoUpdatedEvent.todoUpdated.priority
+        this.subtasks = todoUpdatedEvent.todoUpdated.subtasks
     }
 
 

@@ -1,4 +1,4 @@
-package com.example.todolist.coreapi
+package com.example.todolist.coreapi.todo
 
 import org.axonframework.modelling.command.TargetAggregateIdentifier
 

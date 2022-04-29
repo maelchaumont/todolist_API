@@ -1,9 +1,8 @@
-package com.example.todolist.coreapi
+package com.example.todolist.coreapi.todo
 
-import org.axonframework.modelling.command.AggregateIdentifier
-import org.axonframework.modelling.command.TargetAggregateIdentifier
+import com.example.todolist.command.Subtask
 
-class CreateRealTodoCommand(val id: Int, val name: String, val description: String, val priority: String) {
+class CreateRealTodoCommand(val id: Int, val name: String, val description: String, val priority: String, val subtasks: MutableList<Subtask>) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -14,6 +13,7 @@ class CreateRealTodoCommand(val id: Int, val name: String, val description: Stri
         if (name != other.name) return false
         if (description != other.description) return false
         if (priority != other.priority) return false
+        if (subtasks != other.subtasks) return false
 
         return true
     }
@@ -23,12 +23,11 @@ class CreateRealTodoCommand(val id: Int, val name: String, val description: Stri
         result = 31 * result + name.hashCode()
         result = 31 * result + description.hashCode()
         result = 31 * result + priority.hashCode()
+        result = 31 * result + subtasks.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "CreateRealTodoCommand(id=$id, name='$name', description='$description', priority='$priority')"
+        return "CreateRealTodoCommand(id=$id, name='$name', description='$description', priority='$priority', subtasks=$subtasks)"
     }
-
-
 }

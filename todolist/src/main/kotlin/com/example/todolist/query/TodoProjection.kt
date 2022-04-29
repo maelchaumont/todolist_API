@@ -1,24 +1,21 @@
 package com.example.todolist.query
 
 import com.example.todolist.command.Todo
-import com.example.todolist.coreapi.*
-import com.example.todolist.query.FindOneTodoQuery
-import com.google.common.collect.Iterables.find
-import com.mongodb.client.MongoClientFactory
+import com.example.todolist.coreapi.todo.*
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksAddedToTodoEvent
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksDeletedFromTodoEvent
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.mongodb.core.MongoTemplate
-import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
-import java.util.*
 
 @Component
-class TodoProjection(@Autowired val todoRepository: TodoRepository, val myCommandGateway: CommandGateway) {
+class TodoProjection(@Autowired val todoRepository: TodoRepository,
+                     @Autowired val subtaskRepository: SubtaskRepository,
+                     val myCommandGateway: CommandGateway) {
 
     @EventHandler
     fun on(todoDTOCreatedEvent: TodoDTOCreatedEvent) {
@@ -27,10 +24,13 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository, val myComman
             newId = todoRepository.findAll().maxOf { todo -> todo.id as Int} + 1
         else
             newId = 0
-        myCommandGateway.sendAndWait<CreateRealTodoCommand>(CreateRealTodoCommand(newId,
-                                                                                  todoDTOCreatedEvent.theTodoDTO.name,
-                                                                                  todoDTOCreatedEvent.theTodoDTO.description,
-                                                                                  todoDTOCreatedEvent.theTodoDTO.priority))
+        myCommandGateway.sendAndWait<CreateRealTodoCommand>(
+            CreateRealTodoCommand(newId,
+                                  todoDTOCreatedEvent.theTodoDTO.name,
+                                  todoDTOCreatedEvent.theTodoDTO.description,
+                                  todoDTOCreatedEvent.theTodoDTO.priority,
+                                  todoDTOCreatedEvent.theTodoDTO.subtasks)
+        )
     }
 
     @EventHandler
@@ -52,7 +52,7 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository, val myComman
 
     @EventHandler
     fun on(todoUpdatedEvent: TodoUpdatedEvent): ResponseEntity<Any> {
-        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).isPresent) { //trouve l'ancienne virsion du Todo possédant le m^me id que le nouveau
+        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).isPresent) { //trouve l'ancienne version du Todo possédant le même id que le nouveau
             val todoToUpdate = todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).get()
             todoToUpdate.name = todoUpdatedEvent.todoUpdated.name
             todoToUpdate.description = todoUpdatedEvent.todoUpdated.description
@@ -63,6 +63,21 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository, val myComman
         else
             return ResponseEntity(HttpStatus.NOT_FOUND)
     }
+
+    //=========== TODOS AND SUBTASKS INTERACTION ===========
+
+    @EventHandler
+    fun handle(subtasksAddedToTodoEvent: SubtasksAddedToTodoEvent)/*: ResponseEntity<Todo>*/ {
+        todoRepository.save(subtasksAddedToTodoEvent.todo)
+        //return ResponseEntity(subtasksAddedToTodoEvent.todo, HttpStatus.CREATED)
+    }
+
+    @EventHandler
+    fun handle(subtasksDeletedFromTodoEvent: SubtasksDeletedFromTodoEvent) {
+        todoRepository.save(subtasksDeletedFromTodoEvent.todo)
+    }
+
+    //=========== QUERY ===========
 
     @QueryHandler
     fun handle(findAllTodoQuery: FindAllTodoQuery): List<Todo> {
