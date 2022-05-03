@@ -1,19 +1,53 @@
 package com.example.todolist.command
 
 import com.example.todolist.coreapi.subtask.CreateSubtaskCommand
+import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
+import com.example.todolist.coreapi.subtask.SubtaskCreatedEvent
+import com.example.todolist.coreapi.subtask.SubtaskDeletedEvent
 import org.axonframework.commandhandling.CommandHandler
+import org.axonframework.eventsourcing.EventSourcingHandler
+import org.axonframework.modelling.command.AggregateIdentifier
+import org.axonframework.modelling.command.AggregateLifecycle
+import org.axonframework.modelling.command.AggregateLifecycle.apply
+import org.axonframework.modelling.command.AggregateLifecycle.markDeleted
+import org.axonframework.spring.stereotype.Aggregate
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.MongoId
 
-
+@Aggregate
 class Subtask() {
-    @Id
-    var subtaskID: String = ""
-    var name: String = ""
+    @AggregateIdentifier
+    @MongoId
+    var subtaskID: String? = null
+    var name: String? = null
+
+    //appelé par SubtaskAndSubtaskViewConverter
+    constructor(subtaskID: String, name: String): this() {
+        this.subtaskID = subtaskID
+        this.name = name
+    }
 
     @CommandHandler
     constructor(createSubtaskCommand: CreateSubtaskCommand) : this() {
         this.subtaskID = createSubtaskCommand.subtaskID
         this.name = createSubtaskCommand.name
+        AggregateLifecycle.apply(SubtaskCreatedEvent(this))
+    }
+
+    @CommandHandler
+    fun subtaskToDelete(deleteSubtaskCommand: DeleteSubtaskCommand) {
+        AggregateLifecycle.apply(SubtaskDeletedEvent(this.subtaskID.toString()))
+    }
+
+    @EventSourcingHandler
+    fun subtaskCreated(subtaskCreatedEvent: SubtaskCreatedEvent) {
+        this.subtaskID = subtaskCreatedEvent.subtaskCreated.subtaskID
+        this.name = subtaskCreatedEvent.subtaskCreated.name
+    }
+
+    @EventSourcingHandler
+    fun subtaskDeleted(subtaskDeletedEvent: SubtaskDeletedEvent) {
+        markDeleted()
     }
 
 

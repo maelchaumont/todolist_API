@@ -18,20 +18,14 @@ import org.springframework.data.mongodb.core.mapping.Field
 import org.springframework.data.mongodb.core.mapping.MongoId
 
 @Aggregate
-@Document(collection = "todolist")
 //no args Constructor //pas compatible avec mot clé data, jsp pourquoi
 class Todo constructor()  {
-    @MongoId
     @AggregateIdentifier
     var id: Int? = null //pas initialisé à la bonne valeur (pour le constructeur sans paramètres)
-    @Field(name = "name")
     var name: String? = null
-    @Field(name = "description")
     var description: String? = null
-    @Field(name = "priority")
     var priority: String? = null
 
-    @AggregateMember
     @Field(name = "subtasks")
     var subtasks: MutableList<Subtask> = mutableListOf()
 
@@ -43,6 +37,15 @@ class Todo constructor()  {
         this.priority = createRealTodoCommand.priority
         this.subtasks = createRealTodoCommand.subtasks
         AggregateLifecycle.apply(TodoCreatedEvent(this))
+    }
+
+    //appelé par le TodoAndTodoViewConverter
+    constructor(id: Int, name: String, description: String, priority: String, subtasks: MutableList<Subtask>) : this() {
+        this.id = id
+        this.name = name
+        this.description = description
+        this.priority = priority
+        this.subtasks = subtasks
     }
 
     @CommandHandler
@@ -60,7 +63,6 @@ class Todo constructor()  {
 
     @CommandHandler
     fun deleteTodo(deleteTodoCommand: DeleteTodoCommand){
-        markDeleted()
         apply(TodoDeletedEvent(id as Int))
     }
 
@@ -72,11 +74,14 @@ class Todo constructor()  {
 
     @CommandHandler
     fun delSubtasks(deleteSubtasksFromTodosCommand: DeleteSubtasksFromTodosCommand) {
-        subtasks.removeAll(deleteSubtasksFromTodosCommand.subtasksToDelete)
+        if(!subtasks.containsAll(deleteSubtasksFromTodosCommand.subtasksToDelete))
+            throw java.lang.IllegalArgumentException("Impossible de supprimer ces subtasks de ce Todo ! Le Todo ne contient pas une/plusieurs des subtasks indiquées")
+        //subtasks.removeAll(deleteSubtasksFromTodosCommand.subtasksToDelete)
+        subtasks.removeIf { actualSub -> deleteSubtasksFromTodosCommand.subtasksToDelete.contains(actualSub) }
         apply(SubtasksDeletedFromTodoEvent(this, deleteSubtasksFromTodosCommand.subtasksToDelete))
     }
 
-    /*
+
     @EventSourcingHandler
     fun on(todoCreatedEvent: TodoCreatedEvent){
         this.id = todoCreatedEvent.theTodo.id
@@ -85,7 +90,7 @@ class Todo constructor()  {
         this.priority = todoCreatedEvent.theTodo.priority
         this.subtasks = todoCreatedEvent.theTodo.subtasks
     }
-     */
+
 
     @EventSourcingHandler
     fun on(todoUpdatedEvent: TodoUpdatedEvent) {
@@ -95,6 +100,10 @@ class Todo constructor()  {
         this.subtasks = todoUpdatedEvent.todoUpdated.subtasks
     }
 
+    @EventSourcingHandler
+    fun on(todoDeletedEvent: TodoDeletedEvent) {
+        markDeleted()
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

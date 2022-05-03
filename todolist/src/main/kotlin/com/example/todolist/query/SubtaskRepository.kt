@@ -5,5 +5,5 @@ import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 
 @Repository("repo2")
-interface SubtaskRepository : MongoRepository<Subtask, String> {
+interface SubtaskRepository : MongoRepository<SubtaskView, String> {
 }
