@@ -1,30 +1,25 @@
 package com.example.todolist.controllers
 
+import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.command.TodoNoIdDTO
-import com.example.todolist.coreapi.CreateRealTodoCommand
-import com.example.todolist.coreapi.DeleteTodoCommand
-import com.example.todolist.coreapi.TodoDTOCreatedEvent
-import com.example.todolist.coreapi.UpdateTodoCommand
-import com.example.todolist.query.CountTodosQuery
-import com.example.todolist.query.FindAllTodoQuery
-import com.example.todolist.query.FindOneTodoQuery
-import com.example.todolist.query.FindTodosByPriority
-import com.fasterxml.jackson.core.JsonToken
+import com.example.todolist.coreapi.queryMessage.*
+import com.example.todolist.coreapi.subtask.CreateSubtaskCommand
+import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
+import com.example.todolist.coreapi.todo.DeleteTodoCommand
+import com.example.todolist.coreapi.todo.TodoDTOCreatedEvent
+import com.example.todolist.coreapi.todo.UpdateTodoCommand
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.AddSubtasksToTodosCommand
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.DeleteSubtasksFromTodosCommand
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.util.JSONPObject
-import io.grpc.internal.JsonParser
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.gateway.EventGateway
-import org.axonframework.messaging.responsetypes.ResponseType
 import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
-import org.bson.json.JsonObject
 import org.springframework.boot.json.GsonJsonParser
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
 import java.util.concurrent.CompletableFuture
 
 
@@ -45,6 +40,8 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
         Todo(3, "Number3","Bonjour",false, "medium"))
      */
 
+    //============== TODOS ==============
+
     @GetMapping("/todos")
     fun todosGET(): ResponseEntity<MutableList<Todo>> {
         return ResponseEntity(queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
@@ -60,7 +57,7 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
 
     @PostMapping("/todos")
     fun postController(@RequestBody todoNoIdDTO: TodoNoIdDTO) {
-        myEventGateway.publish(TodoDTOCreatedEvent(TodoNoIdDTO(todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority)))
+        myEventGateway.publish(TodoDTOCreatedEvent(TodoNoIdDTO(todoNoIdDTO.name, todoNoIdDTO.description, todoNoIdDTO.priority, todoNoIdDTO.subtasks)))
     }
 
     @GetMapping("/todos/count")
@@ -69,53 +66,71 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
     }
 
     @DeleteMapping("/todos/{id}")
-    fun todosDELETEOne(@PathVariable id: Int){
+    fun todosDELETEOne(@PathVariable id: Int): ResponseEntity<String>{
         myCommandGateway.send<DeleteTodoCommand>(DeleteTodoCommand(id))
+        return ResponseEntity("Todo successfully deleted", HttpStatus.OK)
     }
 
-    @PostMapping("todos/update")
+    @PatchMapping("todos/update")
     fun updateTodo(@RequestBody myJson: String){
         // pas sûr du tout que ça marche, il y a un cast un peu bizarre à la fin
+        //en fait ça marche
         val idTodo: Int = (GsonJsonParser().parseMap(myJson)["id"] as Double).toInt()
         myCommandGateway.send<UpdateTodoCommand>(UpdateTodoCommand(ObjectMapper().readValue(myJson, Map::class.java) as Map<String, Any>, idTodo))
     }
 
 
 
-
     @GetMapping("/todos/priority")
     fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): ResponseEntity<MutableList<Todo>> { // = QueryParam
-        return ResponseEntity(queryGateway.query(FindTodosByPriority(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
-        /*
-        val LIST_PRIORITIES : List<String> = listOf("low", "medium", "high")
-        if(prio in LIST_PRIORITIES)
-            return ResponseEntity(todos.filter { todo -> todo.priority == prio }, HttpStatus.OK)
-        else
-            return ResponseEntity("Existing priorities are : $LIST_PRIORITIES", HttpStatus.NOT_FOUND)
-         */
+        return ResponseEntity(queryGateway.query(FindTodosByPriorityQuery(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
     }
 
-    /*
-    @PostMapping("/todos/add-subtasks")
-    fun todosAddSubtask(@RequestBody jsonBody: TaskAndSubtasksDTO): ResponseEntity<Any> {
-        val mainTodo: Todo = todos.find { todo -> todo.id == jsonBody.mainTodoId}
-            ?: return ResponseEntity("Resource with id = mainTodoId not found", HttpStatus.NOT_FOUND) // ?: appelé Elvis operator = if mainTodo == null
+    //============== SUBTASKS ==============
 
-        for (todo in todos) {
-            if (todo.id in jsonBody.subtasksIds && todo.id != mainTodo.id) mainTodo.subTasks.add(todo)
+    @GetMapping("/subtask")
+    fun getSubtask(): ResponseEntity<MutableList<Subtask>> {
+        return ResponseEntity(queryGateway.query(FindAllSubtasksQuery(), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get(), HttpStatus.OK)
+    }
+
+    @PostMapping("/subtask")
+    fun addSubtask(@RequestParam("name") name: String): ResponseEntity<Any> {
+        var newSubtaskID: String? = queryGateway.query(FindNewSubtaskIDQuery(), ResponseTypes.instanceOf(String::class.java)).get()
+        if(newSubtaskID.isNullOrEmpty())
+            newSubtaskID = "sub0"
+        myCommandGateway.send<CreateSubtaskCommand>(CreateSubtaskCommand(newSubtaskID, name))
+        return ResponseEntity(HttpStatus.CREATED)
+    }
+
+    @DeleteMapping("/subtask/{subtaskID}")
+    fun delSubtask(@PathVariable subtaskID: String): ResponseEntity<String>{
+        myCommandGateway.send<DeleteTodoCommand>(DeleteSubtaskCommand(subtaskID))
+        return ResponseEntity("Subtask successfully deleted", HttpStatus.OK)
+    }
+
+    //============== TODOs & SUBTASKS INTERACTION ==============
+
+    @PostMapping("/todos/subtasks")
+    fun todosAddSubtasks(@RequestBody jsonBody: String) {
+        val idTodos = GsonJsonParser().parseMap(jsonBody)["idTodos"] as List<Double>
+        val subtasksIDs = GsonJsonParser().parseMap(jsonBody)["subtasksIDs"] as List<String>
+        val subtasksList = queryGateway.query(FindSubtasksByIDQuery(subtasksIDs), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
+        idTodos.forEach {
+            todoID -> if(!queryGateway.query(FindAllTodosIDsQuery(), ResponseTypes.multipleInstancesOf(Int::class.java)).get().contains(todoID.toInt()))
+                            throw IllegalArgumentException("Une des todos indiqués n'existe pas !")
         }
-        return ResponseEntity("Resource created", HttpStatus.CREATED)
-    }
-
-    @DeleteMapping("/todos/delete-subtasks")
-    fun todosDeleteSubtask(@RequestBody jsonBody: TaskAndSubtasksDTO): ResponseEntity<Any> {
-        val mainTodo: Todo = todos.find { todo -> todo.id == jsonBody.mainTodoId}
-            ?: return ResponseEntity("Resource with id = mainTodoId not found", HttpStatus.NOT_FOUND) // = if mainTodo == null
-
-        for (todo in mainTodo.subTasks) {
-            if (todo.id in jsonBody.subtasksIds) mainTodo.subTasks.remove(todo)
+        subtasksIDs.forEach {
+            subID ->  if(!queryGateway.query(FindAllSubtasksIDsQuery(), ResponseTypes.multipleInstancesOf(String::class.java)).get().contains(subID))
+                            throw IllegalArgumentException("Une des subtasks indiquées n'existe pas !")
         }
-        return ResponseEntity("Resource deleted", HttpStatus.CREATED)
+        idTodos.forEach{ idTodo -> myCommandGateway.send<AddSubtasksToTodosCommand>(AddSubtasksToTodosCommand(idTodo.toInt(), subtasksList)) }
     }
-     */
+
+    @DeleteMapping("/todos/subtasks")
+    fun todosDelSubtasks(@RequestBody jsonBody: String) {
+        val idTodos = GsonJsonParser().parseMap(jsonBody)["idTodos"] as List<Double>
+        val subtasksIDs = GsonJsonParser().parseMap(jsonBody)["subtasksIDs"] as List<String>
+        val subtasksList = queryGateway.query(FindSubtasksByIDQuery(subtasksIDs), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
+        idTodos.forEach{ idTodo -> myCommandGateway.send<DeleteSubtasksFromTodosCommand>(DeleteSubtasksFromTodosCommand(idTodo.toInt(), subtasksList)) }
+    }
 }

@@ -1,9 +1,9 @@
 package com.example.todolist.query
 
-import com.example.todolist.command.Todo
+import com.example.todolist.command.Subtask
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 
-@Repository("prout")
-interface TodoRepository: MongoRepository<TodoView, Int> {
+@Repository("repo2")
+interface SubtaskRepository : MongoRepository<SubtaskView, String> {
 }

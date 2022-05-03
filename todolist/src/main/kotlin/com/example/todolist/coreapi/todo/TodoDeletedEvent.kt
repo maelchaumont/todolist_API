@@ -1,4 +1,4 @@
-package com.example.todolist.coreapi
+package com.example.todolist.coreapi.todo
 
 class TodoDeletedEvent(val idToDelete: Int) {
 }
