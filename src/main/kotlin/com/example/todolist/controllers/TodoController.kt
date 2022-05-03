@@ -130,6 +130,14 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
     fun todosDelSubtasks(@RequestBody jsonBody: String) {
         val idTodos = GsonJsonParser().parseMap(jsonBody)["idTodos"] as List<Double>
         val subtasksIDs = GsonJsonParser().parseMap(jsonBody)["subtasksIDs"] as List<String>
+        idTodos.forEach {
+                todoID -> if(!queryGateway.query(FindAllTodosIDsQuery(), ResponseTypes.multipleInstancesOf(Int::class.java)).get().contains(todoID.toInt()))
+            throw IllegalArgumentException("Une des todos indiqués n'existe pas !")
+        }
+        subtasksIDs.forEach {
+                subID ->  if(!queryGateway.query(FindAllSubtasksIDsQuery(), ResponseTypes.multipleInstancesOf(String::class.java)).get().contains(subID))
+            throw IllegalArgumentException("Une des subtasks indiquées n'existe pas !")
+        }
         val subtasksList = queryGateway.query(FindSubtasksByIDQuery(subtasksIDs), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
         idTodos.forEach{ idTodo -> myCommandGateway.send<DeleteSubtasksFromTodosCommand>(DeleteSubtasksFromTodosCommand(idTodo.toInt(), subtasksList)) }
     }

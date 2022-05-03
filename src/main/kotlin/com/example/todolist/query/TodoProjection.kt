@@ -25,6 +25,12 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
             newId = todoRepository.findAll().maxOf { todo -> todo.id as Int} + 1
         else
             newId = 0
+         /*
+        if(todoRepository.count().toInt() != 0)
+            newId = todoRepository.findAll().last().id+1
+        else
+            newId = 0
+         */
         myCommandGateway.sendAndWait<CreateRealTodoCommand>(
             CreateRealTodoCommand(newId,
                                   todoDTOCreatedEvent.theTodoDTO.name,

@@ -25,8 +25,6 @@ class Todo constructor()  {
     var name: String? = null
     var description: String? = null
     var priority: String? = null
-
-    @Field(name = "subtasks")
     var subtasks: MutableList<Subtask> = mutableListOf()
 
     @CommandHandler
@@ -74,10 +72,9 @@ class Todo constructor()  {
 
     @CommandHandler
     fun delSubtasks(deleteSubtasksFromTodosCommand: DeleteSubtasksFromTodosCommand) {
-        if(!subtasks.containsAll(deleteSubtasksFromTodosCommand.subtasksToDelete))
-            throw java.lang.IllegalArgumentException("Impossible de supprimer ces subtasks de ce Todo ! Le Todo ne contient pas une/plusieurs des subtasks indiquées")
-        //subtasks.removeAll(deleteSubtasksFromTodosCommand.subtasksToDelete)
-        subtasks.removeIf { actualSub -> deleteSubtasksFromTodosCommand.subtasksToDelete.contains(actualSub) }
+        //if(!subtasks.containsAll(deleteSubtasksFromTodosCommand.subtasksToDelete))
+            //throw java.lang.IllegalArgumentException("Impossible de supprimer ces subtasks de ce Todo ! Le Todo ne contient pas une/plusieurs des subtasks indiquées")
+        subtasks.removeAll(deleteSubtasksFromTodosCommand.subtasksToDelete)
         apply(SubtasksDeletedFromTodoEvent(this, deleteSubtasksFromTodosCommand.subtasksToDelete))
     }
 
@@ -98,6 +95,16 @@ class Todo constructor()  {
         this.description = todoUpdatedEvent.todoUpdated.description
         this.priority = todoUpdatedEvent.todoUpdated.priority
         this.subtasks = todoUpdatedEvent.todoUpdated.subtasks
+    }
+
+    @EventSourcingHandler
+    fun on(subtasksAddedToTodoEvent: SubtasksAddedToTodoEvent) {
+        subtasks.addAll(subtasksAddedToTodoEvent.subtasksAdded)
+    }
+
+    @EventSourcingHandler
+    fun on(subtasksDeletedFromTodoEvent: SubtasksDeletedFromTodoEvent) {
+        subtasks.removeAll(subtasksDeletedFromTodoEvent.subtasksDeleted)
     }
 
     @EventSourcingHandler
