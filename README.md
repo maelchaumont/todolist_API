@@ -13,5 +13,5 @@ and situated on localhost:27017 port.
 This API should be used with an API client (like Insomnia or Postman) 
 which can send HTTP requests and receive its response.
 
-##Author
+## Author
 Maël CHAUMONT
