@@ -1,17 +1,13 @@
 package com.example.todolist.query
 
 import com.example.todolist.command.Subtask
-import com.example.todolist.coreapi.todo.CreateRealTodoCommand
-import com.example.todolist.coreapi.todo.TodoCreatedEvent
-import org.axonframework.modelling.command.AggregateLifecycle
-import org.axonframework.modelling.command.AggregateMember
-import org.axonframework.spring.stereotype.Aggregate
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 import org.springframework.data.mongodb.core.mapping.MongoId
+import java.util.*
 
 @Document(collection = "todolist")
-class TodoView(@MongoId val id: Int,
+class TodoView(@MongoId val id: UUID,
                @Field(name = "name") var name: String,
                @Field(name = "description") var description: String,
                @Field(name = "priority") var priority: String,

@@ -8,35 +8,34 @@ import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
-import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateLifecycle.markDeleted
 import org.axonframework.spring.stereotype.Aggregate
-import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.MongoId
+import java.util.*
 
 @Aggregate
 class Subtask() {
     @AggregateIdentifier
     @MongoId
-    var subtaskID: String? = null
+    var subtaskID: UUID? = null
     var name: String? = null
 
     //appelé par SubtaskAndSubtaskViewConverter
-    constructor(subtaskID: String, name: String): this() {
+    constructor(subtaskID: UUID, name: String): this() {
         this.subtaskID = subtaskID
         this.name = name
     }
 
     @CommandHandler
     constructor(createSubtaskCommand: CreateSubtaskCommand) : this() {
-        this.subtaskID = createSubtaskCommand.subtaskID
+        this.subtaskID = UUID.randomUUID()
         this.name = createSubtaskCommand.name
         AggregateLifecycle.apply(SubtaskCreatedEvent(this))
     }
 
     @CommandHandler
     fun subtaskToDelete(deleteSubtaskCommand: DeleteSubtaskCommand) {
-        AggregateLifecycle.apply(SubtaskDeletedEvent(this.subtaskID.toString()))
+        AggregateLifecycle.apply(SubtaskDeletedEvent(this.subtaskID!!))
     }
 
     @EventSourcingHandler

@@ -11,17 +11,13 @@ import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateLifecycle.markDeleted
-import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
-import org.springframework.data.mongodb.core.mapping.Document
-import org.springframework.data.mongodb.core.mapping.Field
-import org.springframework.data.mongodb.core.mapping.MongoId
+import java.util.*
 
 @Aggregate
-//no args Constructor //pas compatible avec mot clé data, jsp pourquoi
 class Todo constructor()  {
     @AggregateIdentifier
-    var id: Int? = null //pas initialisé à la bonne valeur (pour le constructeur sans paramètres)
+    var id: UUID? = null
     var name: String? = null
     var description: String? = null
     var priority: String? = null
@@ -29,7 +25,7 @@ class Todo constructor()  {
 
     @CommandHandler
     constructor(createRealTodoCommand: CreateRealTodoCommand) : this() {
-        this.id = createRealTodoCommand.id
+        this.id = UUID.randomUUID()
         this.name = createRealTodoCommand.name
         this.description = createRealTodoCommand.description
         this.priority = createRealTodoCommand.priority
@@ -38,7 +34,7 @@ class Todo constructor()  {
     }
 
     //appelé par le TodoAndTodoViewConverter
-    constructor(id: Int, name: String, description: String, priority: String, subtasks: MutableList<Subtask>) : this() {
+    constructor(id: UUID, name: String, description: String, priority: String, subtasks: MutableList<Subtask>) : this() {
         this.id = id
         this.name = name
         this.description = description
@@ -61,20 +57,16 @@ class Todo constructor()  {
 
     @CommandHandler
     fun deleteTodo(deleteTodoCommand: DeleteTodoCommand){
-        apply(TodoDeletedEvent(id as Int))
+        apply(TodoDeletedEvent(id as UUID))
     }
 
     @CommandHandler
     fun addSubtasks(addSubtasksToTodosCommand: AddSubtasksToTodosCommand) {
-        subtasks.addAll(addSubtasksToTodosCommand.subtasksToAdd)
         apply(SubtasksAddedToTodoEvent(this, addSubtasksToTodosCommand.subtasksToAdd))
     }
 
     @CommandHandler
     fun delSubtasks(deleteSubtasksFromTodosCommand: DeleteSubtasksFromTodosCommand) {
-        //if(!subtasks.containsAll(deleteSubtasksFromTodosCommand.subtasksToDelete))
-            //throw java.lang.IllegalArgumentException("Impossible de supprimer ces subtasks de ce Todo ! Le Todo ne contient pas une/plusieurs des subtasks indiquées")
-        subtasks.removeAll(deleteSubtasksFromTodosCommand.subtasksToDelete)
         apply(SubtasksDeletedFromTodoEvent(this, deleteSubtasksFromTodosCommand.subtasksToDelete))
     }
 
@@ -131,10 +123,11 @@ class Todo constructor()  {
     }
 
     override fun hashCode(): Int {
-        var result = id ?: 0
+        var result = id?.hashCode() ?: 0
         result = 31 * result + (name?.hashCode() ?: 0)
         result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + (priority?.hashCode() ?: 0)
+        result = 31 * result + subtasks.hashCode()
         return result
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class TodoProjection(@Autowired val todoRepository: TodoRepository,
@@ -20,20 +21,8 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
 
     @EventHandler
     fun on(todoDTOCreatedEvent: TodoDTOCreatedEvent) {
-        val newId: Int
-        if(todoRepository.findAll().isNotEmpty())
-            newId = todoRepository.findAll().maxOf { todo -> todo.id as Int} + 1
-        else
-            newId = 0
-         /*
-        if(todoRepository.count().toInt() != 0)
-            newId = todoRepository.findAll().last().id+1
-        else
-            newId = 0
-         */
         myCommandGateway.sendAndWait<CreateRealTodoCommand>(
-            CreateRealTodoCommand(newId,
-                                  todoDTOCreatedEvent.theTodoDTO.name,
+            CreateRealTodoCommand(todoDTOCreatedEvent.theTodoDTO.name,
                                   todoDTOCreatedEvent.theTodoDTO.description,
                                   todoDTOCreatedEvent.theTodoDTO.priority,
                                   todoDTOCreatedEvent.theTodoDTO.subtasks)
@@ -59,7 +48,7 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
 
     @EventHandler
     fun on(todoUpdatedEvent: TodoUpdatedEvent): ResponseEntity<Any> {
-        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).isPresent) { //trouve l'ancienne version du Todo possédant le même id que le nouveau
+        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).isPresent) { //find the older Todo version which has the same ID as the new one
             val todoToUpdate = todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).get()
             todoToUpdate.name = todoUpdatedEvent.todoUpdated.name.toString()
             todoToUpdate.description = todoUpdatedEvent.todoUpdated.description.toString()
@@ -74,9 +63,8 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
     //=========== TODOS AND SUBTASKS INTERACTION ===========
 
     @EventHandler
-    fun handle(subtasksAddedToTodoEvent: SubtasksAddedToTodoEvent)/*: ResponseEntity<Todo>*/ {
+    fun handle(subtasksAddedToTodoEvent: SubtasksAddedToTodoEvent) {
         todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtasksAddedToTodoEvent.todo))
-        //return ResponseEntity(subtasksAddedToTodoEvent.todo, HttpStatus.CREATED)
     }
 
     @EventHandler
@@ -96,8 +84,8 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
     }
 
     @QueryHandler
-    fun handle(findAllTodosIDsQuery: FindAllTodosIDsQuery): List<Int> {
-        val listToReturn: MutableList<Int> = mutableListOf()
+    fun handle(findAllTodosIDsQuery: FindAllTodosIDsQuery): List<UUID> {
+        val listToReturn: MutableList<UUID> = mutableListOf()
         for (todoView in todoRepository.findAll()) {
             listToReturn.add(TodoAndTodoViewConverter().convertTodoViewToTodo(todoView).id!!)
         }
@@ -107,7 +95,6 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
     @QueryHandler
     fun handle(findOneTodoQuery: FindOneTodoQuery): Todo {
         return TodoAndTodoViewConverter().convertTodoViewToTodo(todoRepository.findById(findOneTodoQuery.id).get())
-        //return todoRepository.findById(findOneTodoQuery.id).get()
     }
 
     @QueryHandler
@@ -120,11 +107,10 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
         val listPrioritiesInDB : MutableList<String> = mutableListOf()
         for(todo in todoRepository.findAll()) {
             if(!listPrioritiesInDB.contains(todo.priority) && !todo.priority.equals(""))
-                listPrioritiesInDB.add(todo.priority!!)
+                listPrioritiesInDB.add(todo.priority)
         }
         if(!listPrioritiesInDB.contains(findTodosByPriorityQuery.prioritySearched))
             throw java.lang.IllegalArgumentException("priority ${findTodosByPriorityQuery.prioritySearched} does not exist in database !")
-        //return todoRepository.findAll().filter { todo -> todo.priority.equals(findTodosByPriorityQuery.prioritySearched) }
         val listTodo: MutableList<Todo> = mutableListOf()
         for(todoView in todoRepository.findAll().filter { todo -> todo.priority.equals(findTodosByPriorityQuery.prioritySearched) })
             listTodo.add(TodoAndTodoViewConverter().convertTodoViewToTodo(todoView))

@@ -1,14 +1,13 @@
 package com.example.todolist.query
 
-import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.EntityId
-import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 import org.springframework.data.mongodb.core.mapping.MongoId
+import java.util.*
 
 @Document(collection = "subtask")
-class SubtaskView constructor(@MongoId @EntityId val subtaskID: String,
+class SubtaskView constructor(@MongoId @EntityId val subtaskID: UUID,
                               @Field(name = "name") val name: String) {
 
 

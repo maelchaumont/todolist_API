@@ -16,14 +16,3 @@ fun main(args: Array<String>) {
 	 runApplication<TodolistApplication>(*args)
 }
 
-/*
-@Bean
-fun mongoClient(): MongoClient {
-	return MongoClients.create("mongodb://localhost:27017")
-}
-
-@Bean
-fun mongoTemplate(): MongoTemplate {
-	return MongoTemplate(mongoClient(), "todolist_db")
-}
- */

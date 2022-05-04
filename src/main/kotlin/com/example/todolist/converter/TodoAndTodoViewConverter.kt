@@ -5,7 +5,7 @@ import com.example.todolist.query.TodoView
 
 class TodoAndTodoViewConverter {
     fun convertTodoToTodoView(theTodo: Todo): TodoView {
-        return TodoView(theTodo.id!!, theTodo.name.toString(), theTodo.description.toString(), theTodo.priority.toString(), theTodo.subtasks)
+        return TodoView(theTodo.id!!, theTodo.name!!, theTodo.description!!, theTodo.priority!!, theTodo.subtasks)
     }
 
     fun convertTodoViewToTodo(theTodoView: TodoView): Todo {

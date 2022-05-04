@@ -1,4 +1,6 @@
 package com.example.todolist.coreapi.subtask
 
-class SubtaskDeletedEvent(val subtaskToDeleteID: String) {
+import java.util.*
+
+class SubtaskDeletedEvent(val subtaskToDeleteID: UUID) {
 }

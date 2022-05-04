@@ -1,9 +1,9 @@
 package com.example.todolist.query
 
-import com.example.todolist.command.Todo
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
+import java.util.*
 
 @Repository("prout")
-interface TodoRepository: MongoRepository<TodoView, Int> {
+interface TodoRepository: MongoRepository<TodoView, UUID> {
 }

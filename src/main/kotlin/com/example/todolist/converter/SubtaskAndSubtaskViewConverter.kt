@@ -5,7 +5,7 @@ import com.example.todolist.query.SubtaskView
 
 class SubtaskAndSubtaskViewConverter() {
     fun convertSubtaskToSubtaskView(subtask: Subtask): SubtaskView {
-        return SubtaskView(subtask.subtaskID.toString(), subtask.name.toString())
+        return SubtaskView(subtask.subtaskID!!, subtask.name!!)
     }
 
     fun convertSubtaskViewToSubtask(subtaskView: SubtaskView): Subtask {

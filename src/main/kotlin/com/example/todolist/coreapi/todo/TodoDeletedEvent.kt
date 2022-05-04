@@ -1,4 +1,6 @@
 package com.example.todolist.coreapi.todo
 
-class TodoDeletedEvent(val idToDelete: Int) {
+import java.util.*
+
+class TodoDeletedEvent(val idToDelete: UUID) {
 }

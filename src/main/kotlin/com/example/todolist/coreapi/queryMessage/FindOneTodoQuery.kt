@@ -1,4 +1,6 @@
 package com.example.todolist.coreapi.queryMessage
 
-class FindOneTodoQuery(val id: Int) {
+import java.util.*
+
+class FindOneTodoQuery(val id: UUID) {
 }
