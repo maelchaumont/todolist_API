@@ -11,7 +11,7 @@ class TodoView(@MongoId val id: UUID,
                @Field(name = "name") var name: String,
                @Field(name = "description") var description: String,
                @Field(name = "priority") var priority: String,
-               @Field(name = "subtasks") val subtasks: MutableList<Subtask>) {
+               @Field(name = "subtasks") val subtasks: MutableList<SubtaskView>) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

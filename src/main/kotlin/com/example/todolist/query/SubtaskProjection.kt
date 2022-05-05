@@ -9,7 +9,9 @@ import com.example.todolist.coreapi.queryMessage.FindAllSubtasksQuery
 import com.example.todolist.coreapi.queryMessage.FindSubtasksByIDQuery
 import com.example.todolist.coreapi.subtask.SubtaskCreatedEvent
 import com.example.todolist.coreapi.subtask.SubtaskDeletedEvent
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtaskAddedToTodoEvent
 import org.axonframework.eventhandling.EventHandler
+import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.queryhandling.QueryGateway
 import org.axonframework.queryhandling.QueryHandler
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +24,16 @@ class SubtaskProjection(@Autowired val subtaskRepository: SubtaskRepository,
                         @Autowired val todoRepository: TodoRepository,
                         @Autowired val mongoTemplate: MongoTemplate,
                         @Autowired val queryGateway: QueryGateway) {
+    //SUBTASKS in TODOS
 
+    @EventHandler
+    fun on(subtaskCreatedEvent: SubtaskCreatedEvent) {
+        todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtaskCreatedEvent.todoToAttach))
+    }
+
+
+    //SUBTASKS separated from TODOS
+    /*
     @EventHandler
     fun handle(subtaskCreatedEvent: SubtaskCreatedEvent) {
         mongoTemplate.save(subtaskCreatedEvent.subtaskCreated, "subtask")
@@ -31,13 +42,6 @@ class SubtaskProjection(@Autowired val subtaskRepository: SubtaskRepository,
     @EventHandler
     fun handle(subtaskDeletedEvent: SubtaskDeletedEvent) {
         val subtaskToDelete: Subtask = SubtaskAndSubtaskViewConverter().convertSubtaskViewToSubtask(subtaskRepository.findById(subtaskDeletedEvent.subtaskToDeleteID).get())
-        todoRepository.findAll().forEach {
-            todoView -> val actualTodo: Todo = TodoAndTodoViewConverter().convertTodoViewToTodo(todoView)
-                        if(actualTodo.subtasks.contains(subtaskToDelete)) {
-                            actualTodo.subtasks.remove(subtaskToDelete)
-                            todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(actualTodo))
-                        }
-        }
         subtaskRepository.deleteById(subtaskDeletedEvent.subtaskToDeleteID)
     }
 
@@ -66,4 +70,6 @@ class SubtaskProjection(@Autowired val subtaskRepository: SubtaskRepository,
             subtaskListToReturn.add(SubtaskAndSubtaskViewConverter().convertSubtaskViewToSubtask(subtaskView))
         return subtaskListToReturn
     }
+
+     */
 }
