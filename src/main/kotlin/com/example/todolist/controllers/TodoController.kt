@@ -5,6 +5,7 @@ import com.example.todolist.command.Todo
 import com.example.todolist.command.TodoNoIdDTO
 import com.example.todolist.coreapi.queryMessage.*
 import com.example.todolist.coreapi.subtask.CreateSubtaskCommand
+import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
 import com.example.todolist.coreapi.todo.CreateRealTodoCommand
 import com.example.todolist.coreapi.todo.DeleteTodoCommand
 import com.example.todolist.coreapi.todo.UpdateTodoCommand
@@ -80,9 +81,15 @@ class TodoController(val myCommandGateway: CommandGateway, val queryGateway: Que
     @PostMapping("/subtask")
     fun addSubtask(@RequestBody myJson: String) {
         val subtaskName = GsonJsonParser().parseMap(myJson)["name"] as String
-        val idTodoAttached = UUID.fromString(GsonJsonParser().parseMap(myJson)["idTodoAttached"] as String)
-        myCommandGateway.send<CreateSubtaskCommand>(CreateSubtaskCommand(subtaskName, idTodoAttached))
-        //myCommandGateway.send<AddSubtaskToTodoCommand>(AddSubtaskToTodoCommand(idTodoAttached, ))
+        val todoAttachedID = UUID.fromString(GsonJsonParser().parseMap(myJson)["todoAttachedID"] as String)
+        myCommandGateway.send<CreateSubtaskCommand>(CreateSubtaskCommand(subtaskName, todoAttachedID))
+    }
+
+    @DeleteMapping("/subtask")
+    fun deleteSubtask(@RequestBody myJson: String) {
+        val subtaskID = UUID.fromString(GsonJsonParser().parseMap(myJson)["subtaskID"] as String)
+        val todoAttachedID = UUID.fromString(GsonJsonParser().parseMap(myJson)["todoAttachedID"] as String)
+        myCommandGateway.send<DeleteSubtaskCommand>(DeleteSubtaskCommand(subtaskID, todoAttachedID))
     }
 
     /*

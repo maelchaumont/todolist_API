@@ -24,11 +24,16 @@ class SubtaskProjection(@Autowired val subtaskRepository: SubtaskRepository,
                         @Autowired val todoRepository: TodoRepository,
                         @Autowired val mongoTemplate: MongoTemplate,
                         @Autowired val queryGateway: QueryGateway) {
-    //SUBTASKS in TODOS
 
+    //SUBTASKS in TODOS
     @EventHandler
     fun on(subtaskCreatedEvent: SubtaskCreatedEvent) {
         todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtaskCreatedEvent.todoToAttach))
+    }
+
+    @EventHandler
+    fun on(subtaskDeletedEvent: SubtaskDeletedEvent) {
+        todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtaskDeletedEvent.todoAttached))
     }
 
 

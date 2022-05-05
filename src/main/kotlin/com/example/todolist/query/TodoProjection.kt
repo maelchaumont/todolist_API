@@ -54,11 +54,6 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
     //=========== TODOS AND SUBTASKS INTERACTION ===========
 
     @EventHandler
-    fun on(subtasksAddedToTodoEvent: SubtaskAddedToTodoEvent) {
-        todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtasksAddedToTodoEvent.todo))
-    }
-
-    @EventHandler
     fun handle(subtasksAddedToTodoEvent: SubtaskAddedToTodoEvent) {
         todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtasksAddedToTodoEvent.todo))
     }

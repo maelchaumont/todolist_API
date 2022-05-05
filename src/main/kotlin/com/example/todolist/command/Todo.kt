@@ -88,6 +88,7 @@ class Todo constructor()  {
 
     @CommandHandler
     fun delSubtask(deleteSubtaskCommand: DeleteSubtaskCommand) {
+        subtasks.removeIf {sub -> sub.subtaskID!!.equals(deleteSubtaskCommand.subtaskToDeleteID)}
         apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this))
     }
 
