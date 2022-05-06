@@ -82,13 +82,11 @@ class Todo constructor()  {
     @CommandHandler
     fun addSubtask(createSubtaskCommand: CreateSubtaskCommand) {
         val subtaskToAdd = Subtask(UUID.randomUUID(), createSubtaskCommand.name)
-        subtasks.add(subtaskToAdd)
         apply(SubtaskCreatedEvent(subtaskToAdd, this))
     }
 
     @CommandHandler
     fun delSubtask(deleteSubtaskCommand: DeleteSubtaskCommand) {
-        subtasks.removeIf {sub -> sub.subtaskID!!.equals(deleteSubtaskCommand.subtaskToDeleteID)}
         apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this))
     }
 
@@ -125,7 +123,7 @@ class Todo constructor()  {
         markDeleted()
     }
 
-    /*
+
     @EventSourcingHandler
     fun on(subtaskCreatedEvent: SubtaskCreatedEvent) {
         subtasks.add(subtaskCreatedEvent.subtaskCreated)
@@ -135,7 +133,6 @@ class Todo constructor()  {
     fun on(subtaskDeletedEvent: SubtaskDeletedEvent) {
         subtasks.removeIf { sub -> sub.subtaskID!!.equals(subtaskDeletedEvent.subtaskDeletedID) }
     }
-     */
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

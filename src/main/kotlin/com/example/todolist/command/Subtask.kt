@@ -43,12 +43,12 @@ class Subtask() {
         this.name = subtaskCreatedEvent.subtaskCreated.name
     }
      */
-
+    /*
     @EventSourcingHandler
     fun subtaskDeleted(subtaskDeletedEvent: SubtaskDeletedEvent) {
         markDeleted()
     }
-
+    */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
