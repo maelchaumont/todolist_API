@@ -1,9 +1,13 @@
 package com.example.todolist.command
 
+import com.example.todolist.coreapi.subtask.CreateSubtaskCommand
+import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
+import com.example.todolist.coreapi.subtask.SubtaskCreatedEvent
+import com.example.todolist.coreapi.subtask.SubtaskDeletedEvent
 import com.example.todolist.coreapi.todo.*
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.AddSubtasksToTodosCommand
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.AddSubtaskToTodoCommand
 import com.example.todolist.coreapi.todoAndSubtaskInteractions.DeleteSubtasksFromTodosCommand
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksAddedToTodoEvent
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtaskAddedToTodoEvent
 import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksDeletedFromTodoEvent
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
@@ -11,6 +15,7 @@ import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateLifecycle.markDeleted
+import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
 import java.util.*
 
@@ -21,6 +26,7 @@ class Todo constructor()  {
     var name: String? = null
     var description: String? = null
     var priority: String? = null
+    @AggregateMember
     var subtasks: MutableList<Subtask> = mutableListOf()
 
     @CommandHandler
@@ -60,14 +66,28 @@ class Todo constructor()  {
         apply(TodoDeletedEvent(id as UUID))
     }
 
+    /*
     @CommandHandler
-    fun addSubtasks(addSubtasksToTodosCommand: AddSubtasksToTodosCommand) {
-        apply(SubtasksAddedToTodoEvent(this, addSubtasksToTodosCommand.subtasksToAdd))
+    fun addSubtasks(addSubtasksToTodosCommand: AddSubtaskToTodoCommand) {
+        apply(SubtaskAddedToTodoEvent(this, addSubtasksToTodosCommand.subtaskToAdd))
     }
 
     @CommandHandler
     fun delSubtasks(deleteSubtasksFromTodosCommand: DeleteSubtasksFromTodosCommand) {
         apply(SubtasksDeletedFromTodoEvent(this, deleteSubtasksFromTodosCommand.subtasksToDelete))
+    }
+    */
+
+    //ajouté à la place des constructeurs annotés @CommandHandler das Subtask
+    @CommandHandler
+    fun addSubtask(createSubtaskCommand: CreateSubtaskCommand) {
+        val subtaskToAdd = Subtask(UUID.randomUUID(), createSubtaskCommand.name)
+        apply(SubtaskCreatedEvent(subtaskToAdd, this))
+    }
+
+    @CommandHandler
+    fun delSubtask(deleteSubtaskCommand: DeleteSubtaskCommand) {
+        apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this))
     }
 
 
@@ -80,7 +100,6 @@ class Todo constructor()  {
         this.subtasks = todoCreatedEvent.theTodo.subtasks
     }
 
-
     @EventSourcingHandler
     fun on(todoUpdatedEvent: TodoUpdatedEvent) {
         this.name = todoUpdatedEvent.todoUpdated.name
@@ -90,8 +109,8 @@ class Todo constructor()  {
     }
 
     @EventSourcingHandler
-    fun on(subtasksAddedToTodoEvent: SubtasksAddedToTodoEvent) {
-        subtasks.addAll(subtasksAddedToTodoEvent.subtasksAdded)
+    fun on(subtasksAddedToTodoEvent: SubtaskAddedToTodoEvent) {
+        subtasks.add(subtasksAddedToTodoEvent.subtaskAdded)
     }
 
     @EventSourcingHandler
@@ -102,6 +121,17 @@ class Todo constructor()  {
     @EventSourcingHandler
     fun on(todoDeletedEvent: TodoDeletedEvent) {
         markDeleted()
+    }
+
+
+    @EventSourcingHandler
+    fun on(subtaskCreatedEvent: SubtaskCreatedEvent) {
+        subtasks.add(subtaskCreatedEvent.subtaskCreated)
+    }
+
+    @EventSourcingHandler
+    fun on(subtaskDeletedEvent: SubtaskDeletedEvent) {
+        subtasks.removeIf { sub -> sub.subtaskID!!.equals(subtaskDeletedEvent.subtaskDeletedID) }
     }
 
     override fun equals(other: Any?): Boolean {

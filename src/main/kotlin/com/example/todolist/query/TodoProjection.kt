@@ -4,7 +4,7 @@ import com.example.todolist.command.Todo
 import com.example.todolist.converter.TodoAndTodoViewConverter
 import com.example.todolist.coreapi.queryMessage.*
 import com.example.todolist.coreapi.todo.*
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksAddedToTodoEvent
+import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtaskAddedToTodoEvent
 import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksDeletedFromTodoEvent
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.EventHandler
@@ -18,16 +18,6 @@ import java.util.UUID
 @Component
 class TodoProjection(@Autowired val todoRepository: TodoRepository,
                      val myCommandGateway: CommandGateway) {
-
-    @EventHandler
-    fun on(todoDTOCreatedEvent: TodoDTOCreatedEvent) {
-        myCommandGateway.sendAndWait<CreateRealTodoCommand>(
-            CreateRealTodoCommand(todoDTOCreatedEvent.theTodoDTO.name,
-                                  todoDTOCreatedEvent.theTodoDTO.description,
-                                  todoDTOCreatedEvent.theTodoDTO.priority,
-                                  todoDTOCreatedEvent.theTodoDTO.subtasks)
-        )
-    }
 
     @EventHandler
     fun on(todoCreatedEvent: TodoCreatedEvent): ResponseEntity<Any> {
@@ -58,12 +48,13 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
         }
         else
             return ResponseEntity(HttpStatus.NOT_FOUND)
+        //todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).get().
     }
 
     //=========== TODOS AND SUBTASKS INTERACTION ===========
 
     @EventHandler
-    fun handle(subtasksAddedToTodoEvent: SubtasksAddedToTodoEvent) {
+    fun handle(subtasksAddedToTodoEvent: SubtaskAddedToTodoEvent) {
         todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtasksAddedToTodoEvent.todo))
     }
 
