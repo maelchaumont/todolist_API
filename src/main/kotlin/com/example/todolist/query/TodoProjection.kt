@@ -1,11 +1,10 @@
 package com.example.todolist.query
 
+import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.converter.TodoAndTodoViewConverter
 import com.example.todolist.coreapi.queryMessage.*
 import com.example.todolist.coreapi.todo.*
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtaskAddedToTodoEvent
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksDeletedFromTodoEvent
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
@@ -21,46 +20,51 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
 
     @EventHandler
     fun on(todoCreatedEvent: TodoCreatedEvent): ResponseEntity<Any> {
-        todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(todoCreatedEvent.theTodo))
-        return ResponseEntity(todoCreatedEvent.theTodo, HttpStatus.CREATED)
+        //todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(todoCreatedEvent.theTodo))
+        val theTodo = Todo(todoCreatedEvent.id,
+                            todoCreatedEvent.name,
+                            todoCreatedEvent.description,
+                            todoCreatedEvent.priority,
+                            todoCreatedEvent.subtasks.map { Subtask(it.id, it.name) }.toMutableList())
+        val theTodoView = TodoAndTodoViewConverter().convertTodoToTodoView(theTodo)
+        todoRepository.save(theTodoView)
+        return ResponseEntity(theTodoView, HttpStatus.CREATED)
     }
 
 
     @EventHandler
     fun on(todoDeletedEvent: TodoDeletedEvent): ResponseEntity<Any> {
-        if (todoRepository.findById(todoDeletedEvent.idToDelete).isPresent) {
-            todoRepository.deleteById(todoDeletedEvent.idToDelete)
-            return ResponseEntity("todo n°${todoDeletedEvent.idToDelete} deleted", HttpStatus.OK)
+        if (todoRepository.findById(todoDeletedEvent.id).isPresent) {
+            todoRepository.deleteById(todoDeletedEvent.id)
+            return ResponseEntity("todo n°${todoDeletedEvent.id} deleted", HttpStatus.OK)
         }
         else
             return ResponseEntity(HttpStatus.NOT_FOUND)
     }
 
     @EventHandler
-    fun on(todoUpdatedEvent: TodoUpdatedEvent): ResponseEntity<Any> {
-        if (todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).isPresent) { //find the older Todo version which has the same ID as the new one
-            val todoToUpdate = todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).get()
-            todoToUpdate.name = todoUpdatedEvent.todoUpdated.name.toString()
-            todoToUpdate.description = todoUpdatedEvent.todoUpdated.description.toString()
-            todoToUpdate.priority = todoUpdatedEvent.todoUpdated.priority.toString()
+    fun on(todoInfoUpdatedEvent: TodoInfoUpdatedEvent): ResponseEntity<Any> {
+        if (todoRepository.findById(todoInfoUpdatedEvent.id).isPresent) { //find the older Todo version which has the same ID as the new one
+            val todoToUpdate = todoRepository.findById(todoInfoUpdatedEvent.id).get()
+            todoToUpdate.name = todoInfoUpdatedEvent.name.toString()
+            todoToUpdate.description = todoInfoUpdatedEvent.description.toString()
             todoRepository.save(todoToUpdate)
-            return ResponseEntity("todo n°${todoUpdatedEvent.todoUpdated.id} updated", HttpStatus.OK)
+            return ResponseEntity("todo n°${todoInfoUpdatedEvent.id}'s infos(name & description) updated", HttpStatus.OK)
         }
         else
             return ResponseEntity(HttpStatus.NOT_FOUND)
-        //todoRepository.findById(todoUpdatedEvent.todoUpdated.id!!).get().
-    }
-
-    //=========== TODOS AND SUBTASKS INTERACTION ===========
-
-    @EventHandler
-    fun handle(subtasksAddedToTodoEvent: SubtaskAddedToTodoEvent) {
-        todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtasksAddedToTodoEvent.todo))
     }
 
     @EventHandler
-    fun handle(subtasksDeletedFromTodoEvent: SubtasksDeletedFromTodoEvent) {
-        todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(subtasksDeletedFromTodoEvent.todo))
+    fun on(todoPriorityUpdatedEvent: TodoPriorityUpdatedEvent): ResponseEntity<Any> {
+        if (todoRepository.findById(todoPriorityUpdatedEvent.id).isPresent) {
+            val todoToUpdate = todoRepository.findById(todoPriorityUpdatedEvent.id).get()
+            todoToUpdate.priority = todoPriorityUpdatedEvent.priority
+            todoRepository.save(todoToUpdate)
+            return ResponseEntity("todo n°${todoPriorityUpdatedEvent.id}'s infos(name & description) updated", HttpStatus.OK)
+        }
+        else
+            return ResponseEntity(HttpStatus.NOT_FOUND)
     }
 
     //=========== QUERY ===========

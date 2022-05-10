@@ -1,8 +1,11 @@
 package com.example.todolist.coreapi.todo
 
-import com.example.todolist.command.Todo
-import org.axonframework.serialization.Revision
+import java.util.UUID
 
-@Revision("1")
-class TodoCreatedEvent(val theTodo: Todo) {
+data class TodoCreatedEvent(val id: UUID,
+                            val name: String,
+                            val description: String,
+                            val priority: String,
+                            val subtasks: List<Subtask>) {
+    data class Subtask(val id: UUID, val name: String)
 }

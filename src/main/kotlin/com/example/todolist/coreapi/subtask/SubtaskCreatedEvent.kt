@@ -1,7 +1,7 @@
 package com.example.todolist.coreapi.subtask
 
-import com.example.todolist.command.Subtask
-import com.example.todolist.command.Todo
+import java.util.*
 
-class SubtaskCreatedEvent(val subtaskCreated: Subtask, val todoToAttach: Todo) {
+data class SubtaskCreatedEvent (val subtask: Subtask, val idTodoAttached: UUID) {
+    data class Subtask (val idSubtask: UUID, val name: String)
 }

@@ -5,10 +5,6 @@ import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
 import com.example.todolist.coreapi.subtask.SubtaskCreatedEvent
 import com.example.todolist.coreapi.subtask.SubtaskDeletedEvent
 import com.example.todolist.coreapi.todo.*
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.AddSubtaskToTodoCommand
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.DeleteSubtasksFromTodosCommand
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtaskAddedToTodoEvent
-import com.example.todolist.coreapi.todoAndSubtaskInteractions.SubtasksDeletedFromTodoEvent
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.AggregateIdentifier
@@ -30,13 +26,12 @@ class Todo constructor()  {
     var subtasks: MutableList<Subtask> = mutableListOf()
 
     @CommandHandler
-    constructor(createRealTodoCommand: CreateRealTodoCommand) : this() {
-        this.id = UUID.randomUUID()
-        this.name = createRealTodoCommand.name
-        this.description = createRealTodoCommand.description
-        this.priority = createRealTodoCommand.priority
-        this.subtasks = createRealTodoCommand.subtasks
-        AggregateLifecycle.apply(TodoCreatedEvent(this))
+    constructor(createTodoCommand: CreateTodoCommand) : this() {
+        AggregateLifecycle.apply(TodoCreatedEvent(this.id!!,
+                                                  this.name!!,
+                                                  this.description!!,
+                                                  this.priority!!,
+                                                  createTodoCommand.subtasks.map { TodoCreatedEvent.Subtask(UUID.randomUUID(), it.name) }.toMutableList()))
     }
 
     //appelé par le TodoAndTodoViewConverter
@@ -49,16 +44,13 @@ class Todo constructor()  {
     }
 
     @CommandHandler
-    fun updateTodo(updateTodoCommand: UpdateTodoCommand) {
-        for(entry in updateTodoCommand.mapThingsToUpdate.entries) {
-            when(entry.key) { // = switch
-                "name" -> this.name = entry.value as String
-                "description" -> this.description = entry.value as String
-                "priority" -> this.priority = entry.value as String
-                "subtasks" -> this.subtasks = entry.value as MutableList<Subtask>
-            }
-        }
-        apply(TodoUpdatedEvent(this))
+    fun updateTodoInfo(updateTodoInfoCommand: UpdateTodoInfoCommand) {
+        apply(TodoInfoUpdatedEvent(updateTodoInfoCommand.id, updateTodoInfoCommand.name, updateTodoInfoCommand.description))
+    }
+
+    @CommandHandler
+    fun updateTodoPriority(updateTodoPriorityCommand: UpdateTodoPriorityCommand) {
+        apply(TodoPriorityUpdatedEvent(updateTodoPriorityCommand.id, updateTodoPriorityCommand.priority))
     }
 
     @CommandHandler
@@ -66,56 +58,38 @@ class Todo constructor()  {
         apply(TodoDeletedEvent(id as UUID))
     }
 
-    /*
-    @CommandHandler
-    fun addSubtasks(addSubtasksToTodosCommand: AddSubtaskToTodoCommand) {
-        apply(SubtaskAddedToTodoEvent(this, addSubtasksToTodosCommand.subtaskToAdd))
-    }
-
-    @CommandHandler
-    fun delSubtasks(deleteSubtasksFromTodosCommand: DeleteSubtasksFromTodosCommand) {
-        apply(SubtasksDeletedFromTodoEvent(this, deleteSubtasksFromTodosCommand.subtasksToDelete))
-    }
-    */
-
     //ajouté à la place des constructeurs annotés @CommandHandler das Subtask
     @CommandHandler
     fun addSubtask(createSubtaskCommand: CreateSubtaskCommand) {
-        val subtaskToAdd = Subtask(UUID.randomUUID(), createSubtaskCommand.name)
-        apply(SubtaskCreatedEvent(subtaskToAdd, this))
+        apply(SubtaskCreatedEvent(SubtaskCreatedEvent.Subtask(UUID.randomUUID(), createSubtaskCommand.name), this.id!!))
     }
 
     @CommandHandler
     fun delSubtask(deleteSubtaskCommand: DeleteSubtaskCommand) {
-        apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this))
+        apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this.id!!))
     }
 
 
     @EventSourcingHandler
     fun on(todoCreatedEvent: TodoCreatedEvent){
-        this.id = todoCreatedEvent.theTodo.id
-        this.name = todoCreatedEvent.theTodo.name
-        this.description = todoCreatedEvent.theTodo.description
-        this.priority = todoCreatedEvent.theTodo.priority
-        this.subtasks = todoCreatedEvent.theTodo.subtasks
+        this.id = todoCreatedEvent.id
+        this.name = todoCreatedEvent.name
+        this.description = todoCreatedEvent.description
+        this.priority = todoCreatedEvent.priority
+        this.subtasks = todoCreatedEvent.subtasks.map { Subtask(it.id, it.name) }.toMutableList()
     }
 
     @EventSourcingHandler
-    fun on(todoUpdatedEvent: TodoUpdatedEvent) {
-        this.name = todoUpdatedEvent.todoUpdated.name
-        this.description = todoUpdatedEvent.todoUpdated.description
-        this.priority = todoUpdatedEvent.todoUpdated.priority
-        this.subtasks = todoUpdatedEvent.todoUpdated.subtasks
+    fun on(todoInfoUpdatedEvent: TodoInfoUpdatedEvent) {
+        if(!name.isNullOrBlank())
+            this.name = todoInfoUpdatedEvent.name
+        if(!description.isNullOrBlank())
+            this.description = todoInfoUpdatedEvent.description
     }
 
     @EventSourcingHandler
-    fun on(subtasksAddedToTodoEvent: SubtaskAddedToTodoEvent) {
-        subtasks.add(subtasksAddedToTodoEvent.subtaskAdded)
-    }
-
-    @EventSourcingHandler
-    fun on(subtasksDeletedFromTodoEvent: SubtasksDeletedFromTodoEvent) {
-        subtasks.removeAll(subtasksDeletedFromTodoEvent.subtasksDeleted)
+    fun on(todoPriorityUpdatedEvent: TodoPriorityUpdatedEvent) {
+        this.priority = todoPriorityUpdatedEvent.priority
     }
 
     @EventSourcingHandler
@@ -123,15 +97,14 @@ class Todo constructor()  {
         markDeleted()
     }
 
-
     @EventSourcingHandler
     fun on(subtaskCreatedEvent: SubtaskCreatedEvent) {
-        subtasks.add(subtaskCreatedEvent.subtaskCreated)
+        subtasks.add(Subtask(subtaskCreatedEvent.subtask.idSubtask, subtaskCreatedEvent.subtask.name))
     }
 
     @EventSourcingHandler
     fun on(subtaskDeletedEvent: SubtaskDeletedEvent) {
-        subtasks.removeIf { sub -> sub.subtaskID!!.equals(subtaskDeletedEvent.subtaskDeletedID) }
+        subtasks.removeIf { subtask -> subtask.subtaskID!!.equals(subtaskDeletedEvent.subtaskDeletedID) }
     }
 
     override fun equals(other: Any?): Boolean {
