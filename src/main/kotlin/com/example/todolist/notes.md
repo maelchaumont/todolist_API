@@ -9,3 +9,5 @@ val dans le constructeur équivalent à (voir ci-dessous) dans la classe
     }
 
 RestController implémente Controller qui implémente lui-même Component. Component permet de retrouver un Bean, ici la CommandGateway passée en constructeur
+
+    HttpServletResponse.sendRedirect("https://docs.oracle.com/javaee/6/api")

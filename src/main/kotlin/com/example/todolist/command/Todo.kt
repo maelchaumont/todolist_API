@@ -27,20 +27,20 @@ class Todo constructor()  {
 
     @CommandHandler
     constructor(createTodoCommand: CreateTodoCommand) : this() {
-        AggregateLifecycle.apply(TodoCreatedEvent(this.id!!,
-                                                  this.name!!,
-                                                  this.description!!,
-                                                  this.priority!!,
+        AggregateLifecycle.apply(TodoCreatedEvent(UUID.randomUUID(),
+                                                  createTodoCommand.name,
+                                                  createTodoCommand.description,
+                                                  createTodoCommand.priority,
                                                   createTodoCommand.subtasks.map { TodoCreatedEvent.Subtask(UUID.randomUUID(), it.name) }.toMutableList()))
     }
 
     //appelé par le TodoAndTodoViewConverter
-    constructor(id: UUID, name: String, description: String, priority: String, subtasks: MutableList<Subtask>) : this() {
+    constructor(id: UUID, name: String, description: String, priority: String, subtasks: List<Subtask>) : this() {
         this.id = id
         this.name = name
         this.description = description
         this.priority = priority
-        this.subtasks = subtasks
+        this.subtasks = subtasks.toMutableList()
     }
 
     @CommandHandler

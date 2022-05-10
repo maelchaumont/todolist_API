@@ -28,7 +28,7 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
                             todoCreatedEvent.subtasks.map { Subtask(it.id, it.name) }.toMutableList())
         val theTodoView = TodoAndTodoViewConverter().convertTodoToTodoView(theTodo)
         todoRepository.save(theTodoView)
-        return ResponseEntity(theTodoView, HttpStatus.CREATED)
+        return ResponseEntity(theTodoView,HttpStatus.CREATED)
     }
 
 
