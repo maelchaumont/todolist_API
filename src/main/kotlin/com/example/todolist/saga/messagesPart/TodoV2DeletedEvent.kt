@@ -1,4 +1,4 @@
-package com.example.todolist.saga.commandPart
+package com.example.todolist.saga.messagesPart
 
 import java.util.*
 

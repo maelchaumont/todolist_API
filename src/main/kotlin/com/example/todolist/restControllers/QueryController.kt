@@ -4,16 +4,13 @@ import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.queryMessage.*
 import com.example.todolist.export.TodoExcelExporter
+import com.example.todolist.saga.messagesPart.FindAllTodosV2Query
+import com.example.todolist.saga.queryPart.TodoV2Repository
 import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.ResponseBody
-import org.springframework.web.bind.annotation.RestController
-import java.io.IOException
+import org.springframework.web.bind.annotation.*
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -25,8 +22,9 @@ class QueryController(val queryGateway: QueryGateway) {
 
     //============== TODOS ==============
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos")
-    fun todosGET(): ResponseEntity<MutableList<Todo>> {
+    fun todosGET(): ResponseEntity<MutableList<Todo>> { //CompletableFuture<MutableList<Todo>> avec pas de .get()
         return ResponseEntity(queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
     }
 
@@ -55,6 +53,10 @@ class QueryController(val queryGateway: QueryGateway) {
 
     //============ SAGA Todos V2 ============
 
+    @GetMapping("/todosV2")
+    fun gatTodosV2(): MutableList<TodoV2Repository.TodoV2Deadline>? {
+        return queryGateway.query(FindAllTodosV2Query(), ResponseTypes.multipleInstancesOf(TodoV2Repository.TodoV2Deadline::class.java)).get()
+    }
 
     //============== EXPORT ==============
 

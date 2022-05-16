@@ -7,13 +7,17 @@ import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
 import com.example.todolist.coreapi.todo.CreateTodoCommand
 import com.example.todolist.coreapi.todo.DeleteTodoCommand
 import com.example.todolist.coreapi.todo.UpdateTodoInfoCommand
-import com.example.todolist.saga.commandPart.CreateTodoV2Command
-import com.example.todolist.saga.commandPart.DeleteTodoV2Command
+import com.example.todolist.coreapi.todo.UpdateTodoPriorityCommand
+import com.example.todolist.saga.messagesPart.CreateTodoV2Command
+import com.example.todolist.saga.messagesPart.DeleteTodoV2Command
+import com.example.todolist.saga.messagesPart.UpdateTodoV2InfoCommand
+import com.example.todolist.saga.messagesPart.UpdateTodoV2PriorityCommand
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.springframework.boot.json.GsonJsonParser
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
 import java.util.*
 
 
@@ -50,6 +54,8 @@ class CommandController(val myCommandGateway: CommandGateway) {
 
         if(!name.isNullOrBlank() or !description.isNullOrBlank())
             myCommandGateway.send<UpdateTodoInfoCommand>(UpdateTodoInfoCommand(idTodo, name, description))
+        if(!priority.isNullOrBlank())
+            myCommandGateway.send<UpdateTodoPriorityCommand>(UpdateTodoPriorityCommand(idTodo, priority))
         //myCommandGateway.send<UpdateTodoCommand>(UpdateTodoCommand(ObjectMapper().readValue(myJson, Map::class.java) as Map<String, Any>, idTodo))
     }
 
@@ -70,66 +76,36 @@ class CommandController(val myCommandGateway: CommandGateway) {
         myCommandGateway.send<DeleteSubtaskCommand>(DeleteSubtaskCommand(subtaskID, todoAttachedID))
     }
 
-    /*
-    @PostMapping("/subtask")
-    fun addSubtask(@RequestParam("name") name: String): ResponseEntity<Any> {
-        myCommandGateway.send<CreateSubtaskCommand>(CreateSubtaskCommand(name))
-        return ResponseEntity(HttpStatus.CREATED)
-    }
-
-    @DeleteMapping("/subtask/{subtaskID}")
-    fun delSubtask(@PathVariable subtaskID: UUID): ResponseEntity<String>{
-        myCommandGateway.send<DeleteTodoCommand>(DeleteSubtaskCommand(subtaskID))
-        return ResponseEntity("Subtask successfully deleted", HttpStatus.OK)
-    }
-    */
     //============== TODOs & SUBTASKS INTERACTION ==============
 
-    /*  WOULD NEED TO USE A SAGA
-    @PostMapping("/todos/subtasks")
-    fun todosAddSubtasks(@RequestBody jsonBody: String) {
-        val idTodos: MutableList<UUID> = mutableListOf()
-        (GsonJsonParser().parseMap(jsonBody)["idTodos"] as List<String>).forEach {
-                idTodoString -> idTodos.add(UUID.fromString(idTodoString))
-        }
-        val subtasksIDs: MutableList<UUID> = mutableListOf()
-        (GsonJsonParser().parseMap(jsonBody)["subtasksIDs"] as List<String>).forEach {
-                idSubtaskString -> subtasksIDs.add(UUID.fromString(idSubtaskString))
-        }
-        val subtasksList = queryGateway.query(FindSubtasksByIDQuery(subtasksIDs), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
-        idTodos.forEach{ idTodo -> myCommandGateway.send<AddSubtaskToTodoCommand>(AddSubtaskToTodoCommand(idTodo, subtasksList)) }
-    }
 
-    @DeleteMapping("/todos/subtasks")
-    fun todosDelSubtasks(@RequestBody jsonBody: String) {
-        val idTodos: MutableList<UUID> = mutableListOf()
-        (GsonJsonParser().parseMap(jsonBody)["idTodos"] as List<String>).forEach {
-            idTodoString -> idTodos.add(UUID.fromString(idTodoString))
-        }
-        val subtasksIDs: MutableList<UUID> = mutableListOf()
-        (GsonJsonParser().parseMap(jsonBody)["subtasksIDs"] as List<String>).forEach {
-            idSubtaskString -> subtasksIDs.add(UUID.fromString(idSubtaskString))
-        }
-        val subtasksList = queryGateway.query(FindSubtasksByIDQuery(subtasksIDs), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
-        idTodos.forEach{ idTodo -> myCommandGateway.send<DeleteSubtasksFromTodosCommand>(DeleteSubtasksFromTodosCommand(idTodo, subtasksList)) }
-    }
-    */
 
     //============ SAGA Todos V2 ============
 
     @PostMapping("/todosV2")
     fun postTodoV2(@RequestBody todoNoIdDTO: TodoNoIdDTO) {
-        //TOD0 can be modified for a random number of minutes after its creation (between 5 and 15)
         myCommandGateway.send<CreateTodoV2Command>(CreateTodoV2Command(todoNoIdDTO.name,
                                                     todoNoIdDTO.description,
                                                     todoNoIdDTO.priority,
                                                     todoNoIdDTO.subtasks.map { CreateTodoV2Command.Subtask(it.subtaskID!!, it.name!!) },
-                                                    Random().nextInt(10)+5))
+                                                    LocalDateTime.now()))
     }
 
     @DeleteMapping("/todosV2")
     fun delTodoV2(@RequestBody myJson: String) {
         val idTodoToDelete: UUID = UUID.fromString(GsonJsonParser().parseMap(myJson)["idTodoV2"] as String)
         myCommandGateway.send<DeleteTodoV2Command>(DeleteTodoV2Command(idTodoToDelete))
+    }
+
+    @PatchMapping("/todosV2")
+    fun updateTodoV2(@RequestBody myJson: String) {
+        val idTodoV2: UUID = UUID.fromString(GsonJsonParser().parseMap(myJson)["idTodoV2"] as String)
+        val name = GsonJsonParser().parseMap(myJson)["name"] as String?
+        val description = GsonJsonParser().parseMap(myJson)["description"] as String?
+        val priority = GsonJsonParser().parseMap(myJson)["priority"] as String?
+        if(!name.isNullOrBlank() or !description.isNullOrBlank())
+            myCommandGateway.send<UpdateTodoV2InfoCommand>(UpdateTodoV2InfoCommand(idTodoV2, name, description))
+        if(!priority.isNullOrBlank())
+            myCommandGateway.send<UpdateTodoV2PriorityCommand>(UpdateTodoV2PriorityCommand(idTodoV2, priority))
     }
 }
