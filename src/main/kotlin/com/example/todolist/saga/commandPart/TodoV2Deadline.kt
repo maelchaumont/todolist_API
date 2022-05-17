@@ -29,27 +29,6 @@ class TodoV2Deadline() {
     var isLocked: Boolean? = null
     var subtasks: MutableList<Subtask> = mutableListOf()
 
-    /*
-    //called in the Projection
-    constructor(id: UUID,
-                name: String,
-                description: String,
-                priority: String,
-                creationDate: LocalDateTime,
-                minutesBefeforeUpdateImpossible: Int,
-                nbUpdates: Int,
-                subtasks: MutableList<Subtask>) : this() {
-        this.id = id
-        this.name = name
-        this.description = description
-        this.priority = priority
-        this.creationDate = creationDate
-        this.minutesBeforeUpdateImpossible = minutesBefeforeUpdateImpossible
-        this.nbUpdates = nbUpdates
-        this.subtasks = subtasks
-    }
-    */
-
     @CommandHandler
     constructor(createTodoV2Command: CreateTodoV2Command, @Autowired axonConfiguration: AxonConfiguration) : this() {
         val minutesBeforeUpdateImpossible = Random().nextInt(10)

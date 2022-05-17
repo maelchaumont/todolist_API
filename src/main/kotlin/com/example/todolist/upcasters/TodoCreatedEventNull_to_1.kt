@@ -28,6 +28,6 @@ class TodoCreatedEventNull_to_1 : SingleEventUpcaster(){
             ) { event: JsonNode ->
                 (event as ObjectNode).put("subtasks", "[]")
                 event
-            };
+            }
     }
 }

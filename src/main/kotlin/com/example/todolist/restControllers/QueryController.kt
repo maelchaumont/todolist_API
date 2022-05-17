@@ -66,15 +66,6 @@ class QueryController(val queryGateway: QueryGateway) {
         return queryGateway.query(FindAllSagaQuery(), ResponseTypes.multipleInstancesOf(SagaTodoV2Deadline::class.java)).get()
     }
 
-    /*
-    //Actually the percentage is in the saga so idk if we can send a query to the saga
-    @GetMapping("/todosV2/percentage-done")
-    fun getPercentage(@RequestBody myJson: String) {
-        val idTodoV2: UUID = UUID.fromString(GsonJsonParser().parseMap(myJson)["idTodoV2"] as String)
-        return queryGateway.query()
-    }
-    */
-
     //============== EXPORT ==============
 
     @GetMapping("/todos/export/xlsx")

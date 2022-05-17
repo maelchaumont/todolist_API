@@ -1,6 +1,5 @@
 package com.example.todolist.query
 
-import com.example.todolist.command.Subtask
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 import org.springframework.data.mongodb.core.mapping.MongoId

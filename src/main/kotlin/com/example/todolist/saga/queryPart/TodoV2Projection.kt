@@ -5,6 +5,7 @@ import com.example.todolist.saga.messagesPart.*
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.mongodb.core.MongoOperations
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.findById
 import org.springframework.stereotype.Component
@@ -12,7 +13,7 @@ import java.time.LocalDateTime
 import kotlin.random.Random
 
 @Component
-data class TodoV2Projection(@Autowired val mongoTemplate: MongoTemplate) {
+data class TodoV2Projection(@Autowired val mongoTemplate: MongoTemplate, @Autowired val mongoOperations: MongoOperations) {
 
     @EventHandler
     fun on(todoV2CreatedEvent: TodoV2CreatedEvent) {

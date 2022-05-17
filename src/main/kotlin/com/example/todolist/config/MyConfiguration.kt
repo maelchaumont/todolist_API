@@ -21,6 +21,9 @@ class MyConfiguration() {
     @Bean
     fun mongoSagaStore(): MongoSagaStore {
         val xStream = XStream()
+        xStream.allowTypesByWildcard(arrayOf("com.example.todolist.query.**",
+                                             "com.example.todolist.saga.queryPart.**",
+                                             "com.example.todolist.saga.SagaTodoV2Deadline"))
         return MongoSagaStore.builder()
                              .mongoTemplate(axonMongoTemplate())
                              .serializer(XStreamSerializer.builder().xStream(xStream).build())
@@ -31,6 +34,7 @@ class MyConfiguration() {
     fun axonMongoTemplate(): MongoTemplate {
         return DefaultMongoTemplate.builder()
                                     .mongoDatabase(mongoClient())
+                                    .sagasCollectionName("RealSagas")
                                     .build()
     }
 

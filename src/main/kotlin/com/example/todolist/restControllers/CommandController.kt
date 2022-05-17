@@ -52,7 +52,6 @@ class CommandController(val myCommandGateway: CommandGateway) {
             myCommandGateway.send<UpdateTodoInfoCommand>(UpdateTodoInfoCommand(idTodo, name, description))
         if(!priority.isNullOrBlank())
             myCommandGateway.send<UpdateTodoPriorityCommand>(UpdateTodoPriorityCommand(idTodo, priority))
-        //myCommandGateway.send<UpdateTodoCommand>(UpdateTodoCommand(ObjectMapper().readValue(myJson, Map::class.java) as Map<String, Any>, idTodo))
     }
 
 

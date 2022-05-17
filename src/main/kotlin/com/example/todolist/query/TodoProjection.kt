@@ -4,7 +4,10 @@ import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.converter.TodoAndTodoViewConverter
 import com.example.todolist.coreapi.queryMessage.*
-import com.example.todolist.coreapi.todo.*
+import com.example.todolist.coreapi.todo.TodoCreatedEvent
+import com.example.todolist.coreapi.todo.TodoDeletedEvent
+import com.example.todolist.coreapi.todo.TodoInfoUpdatedEvent
+import com.example.todolist.coreapi.todo.TodoPriorityUpdatedEvent
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
@@ -12,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 class TodoProjection(@Autowired val todoRepository: TodoRepository,
@@ -20,7 +23,6 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
 
     @EventHandler
     fun on(todoCreatedEvent: TodoCreatedEvent): ResponseEntity<Any> {
-        //todoRepository.save(TodoAndTodoViewConverter().convertTodoToTodoView(todoCreatedEvent.theTodo))
         val theTodo = Todo(todoCreatedEvent.id,
                             todoCreatedEvent.name,
                             todoCreatedEvent.description,
