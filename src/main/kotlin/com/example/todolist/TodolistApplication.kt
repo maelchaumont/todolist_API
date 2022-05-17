@@ -19,8 +19,18 @@ fun main(args: Array<String>) {
 	 runApplication<TodolistApplication>(*args)
 }
 
-
 @Bean
 fun simpleDeadlineManager(configuration: AxonConfiguration): SimpleDeadlineManager {
 	return SimpleDeadlineManager.builder().scopeAwareProvider(ConfigurationScopeAwareProvider(configuration)).build()
 }
+
+/*
+@Bean
+fun mySecureXStream(): XStream {
+	val xStream = XStream()
+	xStream.allowTypesByWildcard(arrayOf("com.example.todolist.command.**",
+										 "com.example.todolist.query.**",
+										 "com.example.todolist.saga.queryPart.**"))
+	return xStream
+}
+*/

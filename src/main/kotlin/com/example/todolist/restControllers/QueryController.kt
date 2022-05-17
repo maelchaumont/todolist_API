@@ -4,6 +4,8 @@ import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.queryMessage.*
 import com.example.todolist.export.TodoExcelExporter
+import com.example.todolist.saga.SagaTodoV2Deadline
+import com.example.todolist.saga.messagesPart.FindAllSagaQuery
 import com.example.todolist.saga.messagesPart.FindAllTodosV2Query
 import com.example.todolist.saga.queryPart.TodoV2Repository
 import org.axonframework.messaging.responsetypes.ResponseTypes
@@ -40,7 +42,7 @@ class QueryController(val queryGateway: QueryGateway) {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/priority")
-    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): MutableList<Todo> { // = QueryParam
+    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): List<Todo> { // = QueryParam
         return queryGateway.query(FindTodosByPriorityQuery(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
     }
 
@@ -48,15 +50,20 @@ class QueryController(val queryGateway: QueryGateway) {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/subtask")
-    fun getSubtask(): MutableList<Subtask> {
+    fun getSubtask(): List<Subtask> {
         return queryGateway.query(FindAllSubtasksQuery(), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
     }
 
     //============ Todos V2 + SAGA ============
 
     @GetMapping("/todosV2")
-    fun gatTodosV2(): MutableList<TodoV2Repository.TodoV2Deadline> {
+    fun getTodosV2(): List<TodoV2Repository.TodoV2Deadline> {
         return queryGateway.query(FindAllTodosV2Query(), ResponseTypes.multipleInstancesOf(TodoV2Repository.TodoV2Deadline::class.java)).get()
+    }
+
+    @GetMapping("/todosV2/sagas")
+    fun getAllTodoV2Sagas(): List<SagaTodoV2Deadline> {
+        return queryGateway.query(FindAllSagaQuery(), ResponseTypes.multipleInstancesOf(SagaTodoV2Deadline::class.java)).get()
     }
 
     /*

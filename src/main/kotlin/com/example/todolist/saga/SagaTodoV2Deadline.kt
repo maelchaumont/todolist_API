@@ -13,9 +13,11 @@ import org.axonframework.modelling.saga.StartSaga
 import org.axonframework.spring.config.AxonConfiguration
 import org.axonframework.spring.stereotype.Saga
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
-@Saga//(sagaStore = "mongoSagaStore")
+@Saga(sagaStore = "mongoSagaStore")
+@Document(collection = "Saga4Real")
 class SagaTodoV2Deadline(){
     data class Subtask(val id: UUID, val name: String)
 
