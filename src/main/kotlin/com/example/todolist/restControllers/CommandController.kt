@@ -8,14 +8,10 @@ import com.example.todolist.coreapi.todo.CreateTodoCommand
 import com.example.todolist.coreapi.todo.DeleteTodoCommand
 import com.example.todolist.coreapi.todo.UpdateTodoInfoCommand
 import com.example.todolist.coreapi.todo.UpdateTodoPriorityCommand
-import com.example.todolist.saga.messagesPart.CreateTodoV2Command
-import com.example.todolist.saga.messagesPart.DeleteTodoV2Command
-import com.example.todolist.saga.messagesPart.UpdateTodoV2InfoCommand
-import com.example.todolist.saga.messagesPart.UpdateTodoV2PriorityCommand
+import com.example.todolist.saga.messagesPart.*
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.springframework.boot.json.GsonJsonParser
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDateTime
 import java.util.*
@@ -36,11 +32,11 @@ class CommandController(val myCommandGateway: CommandGateway) {
                                                                     todoNoIdDTO.subtasks.map { CreateTodoCommand.Subtask(it.name!!) }))
     }
 
-
+    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/todos/{id}")
-    fun todosDELETEOne(@PathVariable id: UUID): ResponseEntity<String>{
+    fun todosDELETEOne(@PathVariable id: UUID): String{
         myCommandGateway.send<DeleteTodoCommand>(DeleteTodoCommand(id))
-        return ResponseEntity("Todo successfully deleted", HttpStatus.OK)
+        return "Todo successfully deleted"
     }
 
 
@@ -76,11 +72,7 @@ class CommandController(val myCommandGateway: CommandGateway) {
         myCommandGateway.send<DeleteSubtaskCommand>(DeleteSubtaskCommand(subtaskID, todoAttachedID))
     }
 
-    //============== TODOs & SUBTASKS INTERACTION ==============
-
-
-
-    //============ SAGA Todos V2 ============
+    //============ Todos V2 + SAGA ============
 
     @PostMapping("/todosV2")
     fun postTodoV2(@RequestBody todoNoIdDTO: TodoNoIdDTO) {
@@ -107,5 +99,12 @@ class CommandController(val myCommandGateway: CommandGateway) {
             myCommandGateway.send<UpdateTodoV2InfoCommand>(UpdateTodoV2InfoCommand(idTodoV2, name, description))
         if(!priority.isNullOrBlank())
             myCommandGateway.send<UpdateTodoV2PriorityCommand>(UpdateTodoV2PriorityCommand(idTodoV2, priority))
+    }
+
+    @PatchMapping("/todosV2/percentage-done")
+    fun updatePercentage(@RequestBody myJson: String) {
+        val idTodoV2: UUID = UUID.fromString(GsonJsonParser().parseMap(myJson)["idTodoV2"] as String)
+        val newPercentageDone: Int = (GsonJsonParser().parseMap(myJson)["percentageDone"] as Double).toInt()
+        myCommandGateway.send<AddToPercentageDoneTodoV2SagaCommand>(AddToPercentageDoneTodoV2SagaCommand(idTodoV2, newPercentageDone))
     }
 }

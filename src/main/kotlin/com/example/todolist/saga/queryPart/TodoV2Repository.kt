@@ -17,5 +17,5 @@ interface TodoV2Repository: MongoRepository<TodoV2Repository.TodoV2Deadline, UUI
         var priority: String,
         val creationDate: LocalDateTime,
         val minutesBeforeUpdateImpossible: Int,
-        val nbUpdates: Int)
+        var nbUpdates: Int)
 }

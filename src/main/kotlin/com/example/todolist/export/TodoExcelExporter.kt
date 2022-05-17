@@ -1,6 +1,5 @@
 package com.example.todolist.export
 
-import com.example.todolist.command.Subtask
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.util.CellUtil.createCell
 import org.apache.poi.xssf.usermodel.XSSFSheet

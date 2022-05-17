@@ -9,7 +9,6 @@ import com.example.todolist.saga.queryPart.TodoV2Repository
 import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -24,39 +23,50 @@ class QueryController(val queryGateway: QueryGateway) {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos")
-    fun todosGET(): ResponseEntity<MutableList<Todo>> { //CompletableFuture<MutableList<Todo>> avec pas de .get()
-        return ResponseEntity(queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
+    fun todosGET(): MutableList<Todo> {
+        return queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
     }
 
-
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/{id}")
-    fun todosGETOne(@PathVariable id: UUID): ResponseEntity<Todo> {
-        return ResponseEntity(queryGateway.query(FindOneTodoQuery(id), ResponseTypes.instanceOf(Todo::class.java)).get(), HttpStatus.OK)
+    fun todosGETOne(@PathVariable id: UUID): Todo {
+        return queryGateway.query(FindOneTodoQuery(id), ResponseTypes.instanceOf(Todo::class.java)).get()
     }
 
     @GetMapping("/todos/count")
-    fun countTodos(): CompletableFuture<Long>? {
+    fun countTodos(): CompletableFuture<Long> {
         return queryGateway.query(CountTodosQuery(), ResponseTypes.instanceOf(Long::class.java))
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/priority")
-    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): ResponseEntity<MutableList<Todo>> { // = QueryParam
-        return ResponseEntity(queryGateway.query(FindTodosByPriorityQuery(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get(), HttpStatus.OK)
+    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): MutableList<Todo> { // = QueryParam
+        return queryGateway.query(FindTodosByPriorityQuery(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
     }
 
     //============== SUBTASKS ==============
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/subtask")
-    fun getSubtask(): ResponseEntity<MutableList<Subtask>> {
-        return ResponseEntity(queryGateway.query(FindAllSubtasksQuery(), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get(), HttpStatus.OK)
+    fun getSubtask(): MutableList<Subtask> {
+        return queryGateway.query(FindAllSubtasksQuery(), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
     }
 
-    //============ SAGA Todos V2 ============
+    //============ Todos V2 + SAGA ============
 
     @GetMapping("/todosV2")
-    fun gatTodosV2(): MutableList<TodoV2Repository.TodoV2Deadline>? {
+    fun gatTodosV2(): MutableList<TodoV2Repository.TodoV2Deadline> {
         return queryGateway.query(FindAllTodosV2Query(), ResponseTypes.multipleInstancesOf(TodoV2Repository.TodoV2Deadline::class.java)).get()
     }
+
+    /*
+    //Actually the percentage is in the saga so idk if we can send a query to the saga
+    @GetMapping("/todosV2/percentage-done")
+    fun getPercentage(@RequestBody myJson: String) {
+        val idTodoV2: UUID = UUID.fromString(GsonJsonParser().parseMap(myJson)["idTodoV2"] as String)
+        return queryGateway.query()
+    }
+    */
 
     //============== EXPORT ==============
 

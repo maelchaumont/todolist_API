@@ -94,6 +94,11 @@ class TodoV2Deadline() {
         } else throw IllegalStateException("This todo is now locked, it cannot be updated anymore !")
     }
 
+    @CommandHandler
+    fun addPercentageDoneToSaga(addToPercentageDoneTodoV2SagaCommand: AddToPercentageDoneTodoV2SagaCommand) {
+        AggregateLifecycle.apply(TodoV2SagaPercentageDoneAddedEvent(id!!, addToPercentageDoneTodoV2SagaCommand.newPercentage))
+    }
+
     @EventSourcingHandler
     fun on(todoV2CreatedEvent: TodoV2CreatedEvent){
         this.id = todoV2CreatedEvent.id
@@ -109,12 +114,12 @@ class TodoV2Deadline() {
 
     @EventSourcingHandler
     fun on(todoV2InfoUpdatedEvent: TodoV2InfoUpdatedEvent) {
-        nbUpdates?.inc() //increment an Int? variable
+        nbUpdates = nbUpdates?.inc() //increment an Int? variable
     }
 
     @EventSourcingHandler
     fun on(todoV2PriorityUpdatedEvent: TodoV2PriorityUpdatedEvent) {
-        nbUpdates?.inc()
+        nbUpdates = nbUpdates?.inc()
     }
 
     @EventSourcingHandler
