@@ -8,6 +8,7 @@ import com.example.todolist.saga.SagaTodoV2Deadline
 import com.example.todolist.saga.messagesPart.FindAllSagaQuery
 import com.example.todolist.saga.messagesPart.FindAllTodosV2Query
 import com.example.todolist.saga.queryPart.TodoV2Repository
+import org.axonframework.extensions.kotlin.queryMany
 import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
 import org.springframework.http.HttpStatus
@@ -25,9 +26,7 @@ class QueryController(val queryGateway: QueryGateway) {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos")
-    fun todosGET(): MutableList<Todo> {
-        return queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
-    }
+    fun todosGET(): CompletableFuture<List<Todo>> = queryGateway.queryMany(FindAllTodoQuery())
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/{id}")
@@ -77,10 +76,12 @@ class QueryController(val queryGateway: QueryGateway) {
         val headerValue = "attachment; filename=todos_$currentDateTime.xlsx"
         response.setHeader(headerKey, headerValue)
         val listTodo: List<Todo> = queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
-        val excelExporter = TodoExcelExporter(listTodo.map {TodoExcelExporter.Todo(it.id!!,
-                                                                                    it.name!!,
-                                                                                    it.description!!,
-                                                                                    it.priority!!)})
+        val excelExporter = TodoExcelExporter(listTodo.map {
+            TodoExcelExporter.Todo(it.id!!,
+                    it.name!!,
+                    it.description!!,
+                    it.priority!!)
+        })
         excelExporter.doExportXLSX(response)
     }
 }
