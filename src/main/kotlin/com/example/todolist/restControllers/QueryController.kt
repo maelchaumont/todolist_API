@@ -3,6 +3,7 @@ package com.example.todolist.restControllers
 import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.queryMessage.*
+import com.example.todolist.coreapi.todo.TodoDTO
 import com.example.todolist.export.TodoExcelExporter
 import com.example.todolist.saga.SagaTodoV2Deadline
 import com.example.todolist.saga.messagesPart.FindAllSagaQuery
@@ -26,7 +27,7 @@ class QueryController(val queryGateway: QueryGateway) {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos")
-    fun todosGET(): CompletableFuture<List<Todo>> = queryGateway.queryMany(FindAllTodoQuery())
+    fun todosGET(): CompletableFuture<List<TodoDTO>> = queryGateway.queryMany(FindAllTodoQuery())
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/{id}")

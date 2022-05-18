@@ -4,10 +4,7 @@ import com.example.todolist.command.Subtask
 import com.example.todolist.command.Todo
 import com.example.todolist.converter.TodoAndTodoViewConverter
 import com.example.todolist.coreapi.queryMessage.*
-import com.example.todolist.coreapi.todo.TodoCreatedEvent
-import com.example.todolist.coreapi.todo.TodoDeletedEvent
-import com.example.todolist.coreapi.todo.TodoInfoUpdatedEvent
-import com.example.todolist.coreapi.todo.TodoPriorityUpdatedEvent
+import com.example.todolist.coreapi.todo.*
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
@@ -72,13 +69,18 @@ class TodoProjection(@Autowired val todoRepository: TodoRepository,
     //=========== QUERY ===========
 
     @QueryHandler
-    fun handle(findAllTodoQuery: FindAllTodoQuery): List<Todo> {
-        val listToReturn: MutableList<Todo> = mutableListOf()
-        for (todoView in todoRepository.findAll()) {
-            listToReturn.add(TodoAndTodoViewConverter().convertTodoViewToTodo(todoView))
-        }
-        return listToReturn
-    }
+    fun handle(findAllTodoQuery: FindAllTodoQuery): List<TodoDTO> =
+            todoRepository.findAll().map { todoView ->
+                TodoDTO(
+                        id = todoView.id,
+                        name = todoView.name,
+                        description = todoView.description,
+                        priority = todoView.priority,
+                        subtasks = todoView.subtasks.map { subtaskView ->
+                            TodoDTO.Subtask(id = subtaskView.subtaskID, name = subtaskView.name)
+                        },
+                )
+            }
 
     @QueryHandler
     fun handle(findAllTodosIDsQuery: FindAllTodosIDsQuery): List<UUID> {
