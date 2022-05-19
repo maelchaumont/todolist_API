@@ -36,3 +36,12 @@ les attributs et on a pas forcément besoin des méthodes (dans la vue = la mani
 Au début du projet j'avais créé des classes de vue Spéciales avec des converters (TodoView, SubtaskView) mais ce n'est pas nécessaire,
 la solution est de créer une classe dans un contexte différent (voir la classe TodoV2Deadline dans TodoV2Repository, dont le nom réel est 
 com.example.todolist.saga.queryPart.TodoV2Repository.TodoV2Deadline, tandis que le nom réel de l'aggrégat est com.example.todolist.saga.commandPart.TodoV2Deadline)
+---
+Un DTO est un "Data Transfer Object", soit un objet/une classe utilisée uniquement pour faire transiter de l'information.
+On peut en recevoir un dans le Body de la requête, mais aussi en renvoyer dans le Body de la response (sous forme de JSON).
+Attention les DTO ne sont pas forcément comme dans la base de données, on peut transmettre moins d'infos que tout ce qui est stocké en BDD  
+---
+Dans le cas où on voudrait indiquer plusieurs codes de retour (exemple : une Exception a été levée donc on veut renvoyer une 500),
+On peut créer un @ExceptionHandler qui renvoie une ResponseEntity<Error>.
+C'est le @ExceptionHandler le plus spécifique pour une classe qui domine (ex : dans le cas où on a un handler de IllegalArgumentException et un de Exception
+, dans le cas où une IllegalArgumentException est levée alors ce sera le @ExceptionHandler de IllegalArgumentException qui sera appelé).

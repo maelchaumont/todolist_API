@@ -20,7 +20,5 @@ fun main(args: Array<String>) {
 }
 
 @Bean
-fun simpleDeadlineManager(configuration: AxonConfiguration): SimpleDeadlineManager {
-	return SimpleDeadlineManager.builder().scopeAwareProvider(ConfigurationScopeAwareProvider(configuration)).build()
-}
-
+fun simpleDeadlineManager(configuration: AxonConfiguration): SimpleDeadlineManager =
+	SimpleDeadlineManager.builder().scopeAwareProvider(ConfigurationScopeAwareProvider(configuration)).build()

@@ -5,10 +5,9 @@ import java.util.*
 
 class Subtask() {
     @EntityId
-    var subtaskID: UUID? = null
-    var name: String? = null
+    lateinit var subtaskID: UUID
+    lateinit var name: String
 
-    //appelé par SubtaskAndSubtaskViewConverter
     constructor(subtaskID: UUID, name: String): this() {
         this.subtaskID = subtaskID
         this.name = name
@@ -27,8 +26,8 @@ class Subtask() {
     }
 
     override fun hashCode(): Int {
-        var result = subtaskID?.hashCode() ?: 0
-        result = 31 * result + (name?.hashCode() ?: 0)
+        var result = subtaskID.hashCode() ?: 0
+        result = 31 * result + (name.hashCode() ?: 0)
         return result
     }
 

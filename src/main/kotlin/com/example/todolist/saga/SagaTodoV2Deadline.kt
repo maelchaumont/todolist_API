@@ -36,9 +36,33 @@ class SagaTodoV2Deadline(){
         if(todoV2SagaPercentageDoneAddedEvent.newPercentage <= percentageDone)
             throw IllegalArgumentException("The new percentage can't be inferior to the actual one ! The actual value is ${percentageDone}")
         else if(todoV2SagaPercentageDoneAddedEvent.newPercentage >= 100) {
-            //Todo done at 100%, so it is no longer usefull and can be deleted
+            //Todo done at 100%, so it is no longer useful and can be deleted
             commandGateway.send<DeleteTodoV2Command>(DeleteTodoV2Command(todoV2ID!!))
             SagaLifecycle.end()
         } else percentageDone = todoV2SagaPercentageDoneAddedEvent.newPercentage
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SagaTodoV2Deadline
+
+        if (sagaID != other.sagaID) return false
+        if (todoV2ID != other.todoV2ID) return false
+        if (percentageDone != other.percentageDone) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = sagaID?.hashCode() ?: 0
+        result = 31 * result + (todoV2ID?.hashCode() ?: 0)
+        result = 31 * result + percentageDone
+        return result
+    }
+
+    override fun toString(): String {
+        return "SagaTodoV2Deadline(sagaID=$sagaID, todoV2ID=$todoV2ID, percentageDone=$percentageDone)"
     }
 }

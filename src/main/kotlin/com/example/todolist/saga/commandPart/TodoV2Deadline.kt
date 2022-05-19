@@ -15,18 +15,19 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.properties.Delegates
 
 @Aggregate
 class TodoV2Deadline() {
     @AggregateIdentifier
-    var id: UUID? = null
-    var name: String? = null
-    var description: String? = null
-    var priority: String? = null
-    var creationDate: LocalDateTime? = null
-    var minutesBeforeUpdateImpossible: Int? = null
-    var nbUpdates: Int? = null
-    var isLocked: Boolean? = null
+    lateinit var id: UUID
+    lateinit var name: String
+    lateinit var description: String
+    lateinit var priority: String
+    lateinit var creationDate: LocalDateTime
+    var minutesBeforeUpdateImpossible by Delegates.notNull<Int>()
+    var nbUpdates by Delegates.notNull<Int>()
+    var isLocked by Delegates.notNull<Boolean>()
     var subtasks: MutableList<Subtask> = mutableListOf()
 
     @CommandHandler
@@ -45,12 +46,12 @@ class TodoV2Deadline() {
 
     @CommandHandler
     fun handle(deleteTodoV2Command: DeleteTodoV2Command) {
-        AggregateLifecycle.apply(TodoV2DeletedEvent(this.id!!))
+        AggregateLifecycle.apply(TodoV2DeletedEvent(this.id))
     }
 
     @CommandHandler
     fun updateTodoInfo(updateTodoV2InfoCommand: UpdateTodoV2InfoCommand) {
-        if(!isLocked!!) {
+        if(!isLocked) {
             AggregateLifecycle.apply(
                 TodoV2InfoUpdatedEvent(
                     updateTodoV2InfoCommand.id,
@@ -63,7 +64,7 @@ class TodoV2Deadline() {
 
     @CommandHandler
     fun updateTodoPriority(updateTodoV2PriorityCommand: UpdateTodoV2PriorityCommand) {
-        if(!isLocked!!) {
+        if(!isLocked) {
             AggregateLifecycle.apply(
                 TodoV2PriorityUpdatedEvent(
                     updateTodoV2PriorityCommand.id,
@@ -75,7 +76,7 @@ class TodoV2Deadline() {
 
     @CommandHandler
     fun addPercentageDoneToSaga(addToPercentageDoneTodoV2SagaCommand: AddToPercentageDoneTodoV2SagaCommand) {
-        AggregateLifecycle.apply(TodoV2SagaPercentageDoneAddedEvent(id!!, addToPercentageDoneTodoV2SagaCommand.newPercentage))
+        AggregateLifecycle.apply(TodoV2SagaPercentageDoneAddedEvent(id, addToPercentageDoneTodoV2SagaCommand.newPercentage))
     }
 
     @EventSourcingHandler
@@ -93,12 +94,12 @@ class TodoV2Deadline() {
 
     @EventSourcingHandler
     fun on(todoV2InfoUpdatedEvent: TodoV2InfoUpdatedEvent) {
-        nbUpdates = nbUpdates?.inc() //increment an Int? variable
+        nbUpdates++
     }
 
     @EventSourcingHandler
     fun on(todoV2PriorityUpdatedEvent: TodoV2PriorityUpdatedEvent) {
-        nbUpdates = nbUpdates?.inc()
+        nbUpdates++
     }
 
     @EventSourcingHandler
@@ -110,7 +111,7 @@ class TodoV2Deadline() {
     @DeadlineHandler(deadlineName = "myDeadline")
     fun handleDeadline(){
         isLocked = true
-        AggregateLifecycle.apply(TodoV2UpdateLockedEvent(id!!))
+        AggregateLifecycle.apply(TodoV2UpdateLockedEvent(id))
     }
 
     override fun equals(other: Any?): Boolean {
@@ -133,19 +134,19 @@ class TodoV2Deadline() {
     }
 
     override fun hashCode(): Int {
-        var result = id?.hashCode() ?: 0
-        result = 31 * result + (name?.hashCode() ?: 0)
-        result = 31 * result + (description?.hashCode() ?: 0)
-        result = 31 * result + (priority?.hashCode() ?: 0)
-        result = 31 * result + (creationDate?.hashCode() ?: 0)
-        result = 31 * result + (minutesBeforeUpdateImpossible ?: 0)
-        result = 31 * result + (nbUpdates ?: 0)
-        result = 31 * result + (isLocked?.hashCode() ?: 0)
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + priority.hashCode()
+        result = 31 * result + creationDate.hashCode()
+        result = 31 * result + minutesBeforeUpdateImpossible
+        result = 31 * result + nbUpdates
+        result = 31 * result + isLocked.hashCode()
         result = 31 * result + subtasks.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "TodoV2Deadline(id=$id, name=$name, description=$description, priority=$priority, creationDate=$creationDate, minutesBeforeUpdateImpossible=$minutesBeforeUpdateImpossible, nbUpdates=$nbUpdates, isLocked=$isLocked, subtasks=$subtasks)"
+        return "TodoV2Deadline(id=$id, name='$name', description='$description', priority='$priority', creationDate=$creationDate, minutesBeforeUpdateImpossible=$minutesBeforeUpdateImpossible, nbUpdates=$nbUpdates, isLocked=$isLocked, subtasks=$subtasks)"
     }
 }

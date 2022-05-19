@@ -18,12 +18,16 @@ import java.util.*
 @Aggregate
 class Todo constructor()  {
     @AggregateIdentifier
-    var id: UUID? = null
-    var name: String? = null
-    var description: String? = null
-    var priority: String? = null
+    lateinit var id: UUID
+    lateinit var name: String
+    lateinit var description: String
+    lateinit var priority: String
     @AggregateMember
-    var subtasks: MutableList<Subtask> = mutableListOf()
+    var subtasks: MutableList<SubtaskInTodo> = mutableListOf()
+
+    //SUbtask in the Todo context
+    data class SubtaskInTodo(val subtaskID: UUID, val name: String)
+
 
     @CommandHandler
     constructor(createTodoCommand: CreateTodoCommand) : this() {
@@ -35,7 +39,7 @@ class Todo constructor()  {
     }
 
     //appelé par le TodoAndTodoViewConverter
-    constructor(id: UUID, name: String, description: String, priority: String, subtasks: List<Subtask>) : this() {
+    constructor(id: UUID, name: String, description: String, priority: String, subtasks: List<SubtaskInTodo>) : this() {
         this.id = id
         this.name = name
         this.description = description
@@ -55,18 +59,18 @@ class Todo constructor()  {
 
     @CommandHandler
     fun deleteTodo(deleteTodoCommand: DeleteTodoCommand){
-        apply(TodoDeletedEvent(id as UUID))
+        apply(TodoDeletedEvent(id))
     }
 
-    //ajouté à la place des constructeurs annotés @CommandHandler das Subtask
+    //added to replace Subtask builders annotated @CommandHandler
     @CommandHandler
     fun addSubtask(createSubtaskCommand: CreateSubtaskCommand) {
-        apply(SubtaskCreatedEvent(SubtaskCreatedEvent.Subtask(UUID.randomUUID(), createSubtaskCommand.name), this.id!!))
+        apply(SubtaskCreatedEvent(UUID.randomUUID(), createSubtaskCommand.name, this.id))
     }
 
     @CommandHandler
     fun delSubtask(deleteSubtaskCommand: DeleteSubtaskCommand) {
-        apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this.id!!))
+        apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this.id))
     }
 
 
@@ -76,15 +80,13 @@ class Todo constructor()  {
         this.name = todoCreatedEvent.name
         this.description = todoCreatedEvent.description
         this.priority = todoCreatedEvent.priority
-        this.subtasks = todoCreatedEvent.subtasks.map { Subtask(it.id, it.name) }.toMutableList()
+        this.subtasks = todoCreatedEvent.subtasks.map { SubtaskInTodo(it.id, it.name) }.toMutableList()
     }
 
     @EventSourcingHandler
     fun on(todoInfoUpdatedEvent: TodoInfoUpdatedEvent) {
-        if(!name.isNullOrBlank())
-            this.name = todoInfoUpdatedEvent.name
-        if(!description.isNullOrBlank())
-            this.description = todoInfoUpdatedEvent.description
+        if(name.isNotBlank()) this.name = todoInfoUpdatedEvent.name
+        if(description.isNotBlank()) this.description = todoInfoUpdatedEvent.description
     }
 
     @EventSourcingHandler
@@ -99,12 +101,12 @@ class Todo constructor()  {
 
     @EventSourcingHandler
     fun on(subtaskCreatedEvent: SubtaskCreatedEvent) {
-        subtasks.add(Subtask(subtaskCreatedEvent.subtask.idSubtask, subtaskCreatedEvent.subtask.name))
+        subtasks.add(SubtaskInTodo(subtaskCreatedEvent.idSubtask, subtaskCreatedEvent.name))
     }
 
     @EventSourcingHandler
     fun on(subtaskDeletedEvent: SubtaskDeletedEvent) {
-        subtasks.removeIf { subtask -> subtask.subtaskID!!.equals(subtaskDeletedEvent.subtaskDeletedID) }
+        subtasks.removeIf { subtask -> subtask.subtaskID.equals(subtaskDeletedEvent.subtaskDeletedID) }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -117,20 +119,21 @@ class Todo constructor()  {
         if (name != other.name) return false
         if (description != other.description) return false
         if (priority != other.priority) return false
+        if (subtasks != other.subtasks) return false
 
         return true
     }
 
-    override fun toString(): String {
-        return "Todo(id=$id, name='$name', description='$description', priority='$priority')"
-    }
-
     override fun hashCode(): Int {
-        var result = id?.hashCode() ?: 0
-        result = 31 * result + (name?.hashCode() ?: 0)
-        result = 31 * result + (description?.hashCode() ?: 0)
-        result = 31 * result + (priority?.hashCode() ?: 0)
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + description.hashCode()
+        result = 31 * result + priority.hashCode()
         result = 31 * result + subtasks.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return "Todo(id=$id, name='$name', description='$description', priority='$priority', subtasks=$subtasks)"
     }
 }

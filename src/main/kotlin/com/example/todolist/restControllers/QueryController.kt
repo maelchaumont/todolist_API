@@ -1,17 +1,16 @@
 package com.example.todolist.restControllers
 
-import com.example.todolist.command.Subtask
-import com.example.todolist.command.Todo
 import com.example.todolist.coreapi.queryMessage.*
 import com.example.todolist.coreapi.todo.TodoDTO
-import com.example.todolist.export.TodoExcelExporter
+import com.example.todolist.restControllers.export.TodoExcelExporter
 import com.example.todolist.saga.SagaTodoV2Deadline
 import com.example.todolist.saga.messagesPart.FindAllSagaQuery
 import com.example.todolist.saga.messagesPart.FindAllTodosV2Query
 import com.example.todolist.saga.queryPart.TodoV2Repository
+import org.axonframework.extensions.kotlin.query
 import org.axonframework.extensions.kotlin.queryMany
-import org.axonframework.messaging.responsetypes.ResponseTypes
 import org.axonframework.queryhandling.QueryGateway
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import java.text.DateFormat
@@ -21,7 +20,7 @@ import java.util.concurrent.CompletableFuture
 import javax.servlet.http.HttpServletResponse
 
 @RestController
-class QueryController(val queryGateway: QueryGateway) {
+class QueryController(@Autowired val queryGateway: QueryGateway) {
 
     //============== TODOS ==============
 
@@ -31,40 +30,33 @@ class QueryController(val queryGateway: QueryGateway) {
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/{id}")
-    fun todosGETOne(@PathVariable id: UUID): Todo {
-        return queryGateway.query(FindOneTodoQuery(id), ResponseTypes.instanceOf(Todo::class.java)).get()
-    }
+    fun todosGETOne(@PathVariable id: UUID): CompletableFuture<TodoDTO> = queryGateway.query(FindOneTodoQuery(id))
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/count")
-    fun countTodos(): CompletableFuture<Long> {
-        return queryGateway.query(CountTodosQuery(), ResponseTypes.instanceOf(Long::class.java))
-    }
+    fun countTodos(): CompletableFuture<Long> = queryGateway.query(CountTodosQuery())
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todos/priority")
-    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): List<Todo> { // = QueryParam
-        return queryGateway.query(FindTodosByPriorityQuery(prio), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
-    }
+    // RequestParam = QueryParam (?prio=...)
+    fun todosByPriority(@RequestParam("prio", defaultValue = "medium") prio: String): CompletableFuture<List<TodoDTO>> = queryGateway.queryMany(FindTodosByPriorityQuery(prio))
+
 
     //============== SUBTASKS ==============
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/subtask")
-    fun getSubtask(): List<Subtask> {
-        return queryGateway.query(FindAllSubtasksQuery(), ResponseTypes.multipleInstancesOf(Subtask::class.java)).get()
-    }
+    fun getSubtask(): CompletableFuture<List<TodoDTO.Subtask>> = queryGateway.queryMany(FindAllSubtasksQuery())
 
     //============ Todos V2 + SAGA ============
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todosV2")
-    fun getTodosV2(): List<TodoV2Repository.TodoV2Deadline> {
-        return queryGateway.query(FindAllTodosV2Query(), ResponseTypes.multipleInstancesOf(TodoV2Repository.TodoV2Deadline::class.java)).get()
-    }
+    fun getTodosV2(): CompletableFuture<List<TodoV2Repository.TodoV2Deadline>> = queryGateway.queryMany(FindAllTodosV2Query())
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/todosV2/sagas")
-    fun getAllTodoV2Sagas(): List<SagaTodoV2Deadline> {
-        return queryGateway.query(FindAllSagaQuery(), ResponseTypes.multipleInstancesOf(SagaTodoV2Deadline::class.java)).get()
-    }
+    fun getAllTodoV2Sagas(): CompletableFuture<List<SagaTodoV2Deadline>> = queryGateway.queryMany(FindAllSagaQuery())
 
     //============== EXPORT ==============
 
@@ -76,12 +68,12 @@ class QueryController(val queryGateway: QueryGateway) {
         val headerKey = "Content-Disposition"
         val headerValue = "attachment; filename=todos_$currentDateTime.xlsx"
         response.setHeader(headerKey, headerValue)
-        val listTodo: List<Todo> = queryGateway.query(FindAllTodoQuery(), ResponseTypes.multipleInstancesOf(Todo::class.java)).get()
-        val excelExporter = TodoExcelExporter(listTodo.map {
-            TodoExcelExporter.Todo(it.id!!,
-                    it.name!!,
-                    it.description!!,
-                    it.priority!!)
+        val listTodo: CompletableFuture<List<TodoDTO>> = queryGateway.queryMany(FindAllTodoQuery())
+        val excelExporter = TodoExcelExporter(listTodo.get().map {
+            TodoExcelExporter.Todo(it.id,
+                                   it.name,
+                                   it.description,
+                                   it.priority)
         })
         excelExporter.doExportXLSX(response)
     }
