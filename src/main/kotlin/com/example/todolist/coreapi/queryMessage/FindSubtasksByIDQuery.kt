@@ -1,6 +1,5 @@
 package com.example.todolist.coreapi.queryMessage
 
-import java.util.UUID
+import java.util.*
 
-class FindSubtasksByIDQuery(val subtasksIDs: List<UUID>) {
-}
+data class FindSubtasksByIDQuery(val subtasksIDs: List<UUID>)

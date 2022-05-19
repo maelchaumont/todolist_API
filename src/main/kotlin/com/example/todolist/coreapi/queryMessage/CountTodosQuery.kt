@@ -1,4 +1,3 @@
 package com.example.todolist.coreapi.queryMessage
 
-class CountTodosQuery {
-}
+class CountTodosQuery

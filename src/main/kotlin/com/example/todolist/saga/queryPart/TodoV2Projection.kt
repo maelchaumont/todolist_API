@@ -2,7 +2,6 @@ package com.example.todolist.saga.queryPart
 
 import com.example.todolist.saga.SagaTodoV2Deadline
 import com.example.todolist.saga.messagesPart.*
-import com.mongodb.client.MongoClients
 import org.axonframework.eventhandling.EventHandler
 import org.axonframework.queryhandling.QueryHandler
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,8 +64,6 @@ data class TodoV2Projection(@Autowired val mongoTemplate: MongoTemplate, @Autowi
         mongoTemplate.findAll(TodoV2Repository.TodoV2Deadline::class.java, "todoV2Saga")
 
     @QueryHandler
-    fun handle(findAllSagaQuery: FindAllSagaQuery): List<SagaTodoV2Deadline> {
-        val tempMongoTemplate = MongoTemplate(MongoClients.create(), "axonframework")
-        return tempMongoTemplate.findAll(SagaTodoV2Deadline::class.java)
-    }
+    fun handle(findAllSagaQuery: FindAllSagaQuery): List<SagaTodoV2Deadline> =
+        mongoTemplate.findAll(SagaTodoV2Deadline::class.java)
 }

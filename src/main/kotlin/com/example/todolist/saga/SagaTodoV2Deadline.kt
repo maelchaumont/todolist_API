@@ -21,7 +21,7 @@ class SagaTodoV2Deadline(){
     @Id
     val sagaID = UUID.randomUUID()
 
-    var todoV2ID: UUID? = null
+    lateinit var todoV2ID: UUID
     var percentageDone: Int = 0
 
     @StartSaga
@@ -34,10 +34,10 @@ class SagaTodoV2Deadline(){
     @SagaEventHandler(associationProperty = "id")
     fun on (todoV2SagaPercentageDoneAddedEvent: TodoV2SagaPercentageDoneAddedEvent, @Autowired commandGateway: CommandGateway) {
         if(todoV2SagaPercentageDoneAddedEvent.newPercentage <= percentageDone)
-            throw IllegalArgumentException("The new percentage can't be inferior to the actual one ! The actual value is ${percentageDone}")
+            throw IllegalArgumentException("The new percentage can't be inferior to the actual one ! The actual value is $percentageDone")
         else if(todoV2SagaPercentageDoneAddedEvent.newPercentage >= 100) {
             //Todo done at 100%, so it is no longer useful and can be deleted
-            commandGateway.send<DeleteTodoV2Command>(DeleteTodoV2Command(todoV2ID!!))
+            commandGateway.send<DeleteTodoV2Command>(DeleteTodoV2Command(todoV2ID))
             SagaLifecycle.end()
         } else percentageDone = todoV2SagaPercentageDoneAddedEvent.newPercentage
     }
@@ -57,7 +57,7 @@ class SagaTodoV2Deadline(){
 
     override fun hashCode(): Int {
         var result = sagaID?.hashCode() ?: 0
-        result = 31 * result + (todoV2ID?.hashCode() ?: 0)
+        result = 31 * result + (todoV2ID.hashCode() ?: 0)
         result = 31 * result + percentageDone
         return result
     }

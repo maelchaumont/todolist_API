@@ -15,6 +15,9 @@ import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
 import java.util.*
 
+/**
+ * Todo aggregate. It has an id, name, description, priority and a list of Subtask.
+ */
 @Aggregate
 class Todo constructor()  {
     @AggregateIdentifier
@@ -25,7 +28,7 @@ class Todo constructor()  {
     @AggregateMember
     var subtasks: MutableList<SubtaskInTodo> = mutableListOf()
 
-    //SUbtask in the Todo context
+    //Subtask in the Todo context
     data class SubtaskInTodo(val subtaskID: UUID, val name: String)
 
 

@@ -3,6 +3,12 @@ package com.example.todolist.command
 import org.axonframework.modelling.command.EntityId
 import java.util.*
 
+/**
+ * Command class representing a Subtask. Should only be present in Todo aggregate
+ *
+ *  subtaskID : ID of this Subtask
+ *  name : name of this Subtask
+ */
 class Subtask() {
     @EntityId
     lateinit var subtaskID: UUID
@@ -25,13 +31,13 @@ class Subtask() {
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = subtaskID.hashCode() ?: 0
-        result = 31 * result + (name.hashCode() ?: 0)
-        return result
-    }
-
     override fun toString(): String {
         return "Subtask(subtaskID=$subtaskID, name=$name)"
+    }
+
+    override fun hashCode(): Int {
+        var result = subtaskID.hashCode()
+        result = 31 * result + name.hashCode()
+        return result
     }
 }
