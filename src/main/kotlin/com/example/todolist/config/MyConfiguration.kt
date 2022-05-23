@@ -13,7 +13,6 @@ import org.bson.UuidRepresentation
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-
 @Configuration
 class MyConfiguration() {
 
@@ -34,7 +33,7 @@ class MyConfiguration() {
     fun axonMongoTemplate(): MongoTemplate {
         return DefaultMongoTemplate.builder()
                                     .mongoDatabase(mongoClient())
-                                    .sagasCollectionName("RealSagas")
+                                    .sagasCollectionName("realSagas")
                                     .build()
     }
 
@@ -42,7 +41,7 @@ class MyConfiguration() {
     fun mongoClient(): MongoClient {
         val mongoClientSettings = MongoClientSettings.builder()
                                                      .uuidRepresentation(UuidRepresentation.STANDARD)
-                                                     .applyConnectionString(ConnectionString("mongodb://localhost:27017/todolist_db"))
+                                                     .applyConnectionString(ConnectionString("mongodb://localhost:27017"))
                                                      .build()
         return MongoClients.create(mongoClientSettings)
     }

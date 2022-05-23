@@ -72,7 +72,7 @@ class CommandController(val myCommandGateway: CommandGateway) {
         myCommandGateway.send<CreateTodoV2Command>(CreateTodoV2Command(todoNoIdDTO.name,
                                                     todoNoIdDTO.description,
                                                     todoNoIdDTO.priority,
-                                                    todoNoIdDTO.subtasks.map { CreateTodoV2Command.Subtask(it.subtaskID, it.name) },
+                                                    todoNoIdDTO.subtasks.map { CreateTodoV2Command.Subtask(it.name) },
                                                     LocalDateTime.now()))
     }
 

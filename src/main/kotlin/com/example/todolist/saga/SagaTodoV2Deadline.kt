@@ -9,26 +9,21 @@ import org.axonframework.modelling.saga.SagaLifecycle
 import org.axonframework.modelling.saga.StartSaga
 import org.axonframework.spring.stereotype.Saga
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
 
 @Saga(sagaStore = "mongoSagaStore")
-@Document
 class SagaTodoV2Deadline(){
     data class Subtask(val id: UUID, val name: String)
-
-    @Id
-    val sagaID = UUID.randomUUID()
 
     lateinit var todoV2ID: UUID
     var percentageDone: Int = 0
 
     @StartSaga
-    @SagaEventHandler(associationProperty = "id")
+    @SagaEventHandler(associationProperty = "id") //that "id" is the one in the Event. It will be placed automatically in the Association array on MongoDB
     fun on (todoV2CreatedEvent: TodoV2CreatedEvent) {
         this.todoV2ID = todoV2CreatedEvent.id
-        SagaLifecycle.associateWith("todoV2ID", todoV2ID.toString())
+        //Add a new field to the associative Array in MongoDB
+        SagaLifecycle.associateWith("percentageDone", percentageDone)
     }
 
     @SagaEventHandler(associationProperty = "id")
@@ -48,21 +43,19 @@ class SagaTodoV2Deadline(){
 
         other as SagaTodoV2Deadline
 
-        if (sagaID != other.sagaID) return false
         if (todoV2ID != other.todoV2ID) return false
         if (percentageDone != other.percentageDone) return false
 
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = sagaID?.hashCode() ?: 0
-        result = 31 * result + (todoV2ID.hashCode() ?: 0)
-        result = 31 * result + percentageDone
-        return result
+    override fun toString(): String {
+        return "SagaTodoV2Deadline(todoV2ID=$todoV2ID, percentageDone=$percentageDone)"
     }
 
-    override fun toString(): String {
-        return "SagaTodoV2Deadline(sagaID=$sagaID, todoV2ID=$todoV2ID, percentageDone=$percentageDone)"
+    override fun hashCode(): Int {
+        var result = todoV2ID.hashCode()
+        result = 31 * result + percentageDone
+        return result
     }
 }

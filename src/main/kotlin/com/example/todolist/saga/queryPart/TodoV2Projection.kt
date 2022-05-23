@@ -14,7 +14,6 @@ import kotlin.random.Random
 
 @Component
 data class TodoV2Projection(@Autowired val mongoTemplate: MongoTemplate, @Autowired val mongoOperations: MongoOperations) {
-
     @EventHandler
     fun on(todoV2CreatedEvent: TodoV2CreatedEvent) {
         mongoTemplate.save(TodoV2Repository.TodoV2Deadline(

@@ -31,8 +31,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb' //starter = plusieurs dépendances, contient le spring-data-mongodb
 	//implementation 'org.springframework.data:spring-data-mongodb'
 	implementation 'org.apache.poi:poi-ooxml:4.1.0'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.axonframework:axon-test'
+	implementation 'org.axonframework:axon-metrics'
+	implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
 dependencyManagement {

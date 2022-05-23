@@ -7,12 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
-import org.springframework.transaction.annotation.EnableTransactionManagement
 
 
-@SpringBootApplication
+@SpringBootApplication//(exclude = [MongoAutoConfiguration::class, MongoDataAutoConfiguration::class])
 @EnableMongoRepositories
-@EnableTransactionManagement(proxyTargetClass = true)
 class TodolistApplication
 
 fun main(args: Array<String>) {

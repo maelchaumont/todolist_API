@@ -37,7 +37,7 @@ class TodoV2Deadline() {
                                  createTodoV2Command.name,
                                  createTodoV2Command.description,
                                  createTodoV2Command.priority,
-                                 createTodoV2Command.subtasks.map { TodoV2CreatedEvent.Subtask(it.id, it.name) },
+                                 createTodoV2Command.subtasks.map { TodoV2CreatedEvent.Subtask(UUID.randomUUID(), it.name) },
                                  createTodoV2Command.creationDate,
                                  minutesBeforeUpdateImpossible))
 
