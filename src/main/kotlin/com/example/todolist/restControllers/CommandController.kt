@@ -69,11 +69,15 @@ class CommandController(val myCommandGateway: CommandGateway) {
 
     @PostMapping("/todosV2")
     fun postTodoV2(@RequestBody todoNoIdDTO: CreateTodoDTO) {
-        myCommandGateway.send<CreateTodoV2Command>(CreateTodoV2Command(todoNoIdDTO.name,
-                                                    todoNoIdDTO.description,
-                                                    todoNoIdDTO.priority,
-                                                    todoNoIdDTO.subtasks.map { CreateTodoV2Command.Subtask(it.name) },
-                                                    LocalDateTime.now()))
+        myCommandGateway.send<CreateTodoV2Command>(
+            CreateTodoV2Command(
+                todoNoIdDTO.name,
+                todoNoIdDTO.description,
+                todoNoIdDTO.priority,
+                todoNoIdDTO.subtasks.map { CreateTodoV2Command.Subtask(it.name) },
+                LocalDateTime.now()
+            )
+        )
     }
 
     @DeleteMapping("/todosV2")

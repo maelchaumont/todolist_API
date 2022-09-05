@@ -5,11 +5,11 @@ import com.example.todolist.coreapi.subtask.DeleteSubtaskCommand
 import com.example.todolist.coreapi.subtask.SubtaskCreatedEvent
 import com.example.todolist.coreapi.subtask.SubtaskDeletedEvent
 import com.example.todolist.coreapi.todo.*
+import com.example.todolist.saga.messagesPart.TodoV2InfoUpdatedEvent
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
-import org.axonframework.modelling.command.AggregateLifecycle.apply
 import org.axonframework.modelling.command.AggregateLifecycle.markDeleted
 import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.spring.stereotype.Aggregate
@@ -52,28 +52,28 @@ class Todo constructor()  {
 
     @CommandHandler
     fun updateTodoInfo(updateTodoInfoCommand: UpdateTodoInfoCommand) {
-        apply(TodoInfoUpdatedEvent(updateTodoInfoCommand.id, updateTodoInfoCommand.name, updateTodoInfoCommand.description))
+        AggregateLifecycle.apply(TodoInfoUpdatedEvent(updateTodoInfoCommand.id, updateTodoInfoCommand.name, updateTodoInfoCommand.description))
     }
 
     @CommandHandler
     fun updateTodoPriority(updateTodoPriorityCommand: UpdateTodoPriorityCommand) {
-        apply(TodoPriorityUpdatedEvent(updateTodoPriorityCommand.id, updateTodoPriorityCommand.priority))
+        AggregateLifecycle.apply(TodoPriorityUpdatedEvent(updateTodoPriorityCommand.id, updateTodoPriorityCommand.priority))
     }
 
     @CommandHandler
     fun deleteTodo(deleteTodoCommand: DeleteTodoCommand){
-        apply(TodoDeletedEvent(id))
+        AggregateLifecycle.apply(TodoDeletedEvent(id))
     }
 
     //added to replace Subtask builders annotated @CommandHandler
     @CommandHandler
     fun addSubtask(createSubtaskCommand: CreateSubtaskCommand) {
-        apply(SubtaskCreatedEvent(UUID.randomUUID(), createSubtaskCommand.name, this.id))
+        AggregateLifecycle.apply(SubtaskCreatedEvent(UUID.randomUUID(), createSubtaskCommand.name, this.id))
     }
 
     @CommandHandler
     fun delSubtask(deleteSubtaskCommand: DeleteSubtaskCommand) {
-        apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this.id))
+        AggregateLifecycle.apply(SubtaskDeletedEvent(deleteSubtaskCommand.subtaskToDeleteID, this.id))
     }
 
 
@@ -87,9 +87,9 @@ class Todo constructor()  {
     }
 
     @EventSourcingHandler
-    fun on(todoInfoUpdatedEvent: TodoInfoUpdatedEvent) {
-        if(name.isNotBlank()) this.name = todoInfoUpdatedEvent.name
-        if(description.isNotBlank()) this.description = todoInfoUpdatedEvent.description
+    fun on(todoV2InfoUpdatedEvent: TodoV2InfoUpdatedEvent) {
+        if(name.isNotBlank()) this.name = todoV2InfoUpdatedEvent.name
+        if(description.isNotBlank()) this.description = todoV2InfoUpdatedEvent.description
     }
 
     @EventSourcingHandler
